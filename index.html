@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0d0f">
+    <title>Cigarette Tracker</title>
+
+    <!-- Lucide SVG icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div class="app">
+
+    <header class="app-header">
+        <div>
+            <p class="eyebrow">TRACKER</p>
+            <h1>Cigarette Tracker</h1>
+            <p class="subtitle">Current smoking session</p>
+        </div>
+    </header>
+
+    <!-- TODAY -->
+    <section class="card today-card">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">TODAY</p>
+                <h2>Consumption</h2>
+            </div>
+            <i data-lucide="calendar-days" aria-hidden="true"></i>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-item">
+                <strong id="todayCigarettes">0</strong>
+                <span>Cigarettes</span>
+            </div>
+            <div class="summary-item">
+                <strong id="todayCost">₹0</strong>
+                <span>Spent</span>
+            </div>
+            <div class="summary-item">
+                <strong id="todaySessions">0</strong>
+                <span>Sessions</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- CURRENT SESSION -->
+    <section class="section">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">CURRENT SESSION</p>
+                <h2>Consumed</h2>
+            </div>
+
+            <div class="header-actions">
+                <button class="secondary-btn" id="manageCigarettesBtn" type="button">
+                    <i data-lucide="settings-2" aria-hidden="true"></i>
+                    <span>Manage</span>
+                </button>
+
+                <button class="secondary-btn" id="addCigaretteBtn" type="button">
+                    <i data-lucide="plus" aria-hidden="true"></i>
+                    <span>Add</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="selector-wrapper">
+            <label for="cigaretteSelect">Add cigarette to session</label>
+            <select id="cigaretteSelect">
+                <option value="">Select cigarette</option>
+            </select>
+        </div>
+
+        <div id="sessionItems" class="session-items"></div>
+
+        <div class="session-total">
+            <div>
+                <span>Total Cigarettes</span>
+                <strong id="sessionTotalCigarettes">0</strong>
+            </div>
+            <div>
+                <span>Total Cost</span>
+                <strong id="sessionTotalCost">₹0</strong>
+            </div>
+        </div>
+
+        <button class="primary-btn" id="saveSessionBtn" type="button">
+            <i data-lucide="save" aria-hidden="true"></i>
+            Save Session
+        </button>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="section history-section">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">HISTORY</p>
+                <h2>Today's Sessions</h2>
+            </div>
+            <i data-lucide="history" aria-hidden="true"></i>
+        </div>
+
+        <div id="historyList" class="history-list"></div>
+    </section>
+
+</div>
+
+
+<!-- ADD CIGARETTE -->
+<div class="modal-overlay" id="addModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
+
+        <div class="modal-header">
+            <div>
+                <p class="eyebrow">NEW CIGARETTE</p>
+                <h2 id="addModalTitle">Add Cigarette</h2>
+            </div>
+
+            <button class="icon-btn" id="closeModalBtn" type="button" aria-label="Close">
+                <i data-lucide="x" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <form id="addCigaretteForm">
+            <div class="form-group">
+                <label for="cigaretteName">Cigarette Name</label>
+                <input
+                    type="text"
+                    id="cigaretteName"
+                    placeholder="e.g. Classic"
+                    autocomplete="off"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="cigarettePrice">Default price per cigarette</label>
+
+                <div class="price-input">
+                    <span>₹</span>
+                    <input
+                        type="number"
+                        id="cigarettePrice"
+                        placeholder="28"
+                        min="0"
+                        step="0.01"
+                        inputmode="decimal"
+                        required
+                    >
+                </div>
+            </div>
+
+            <button class="primary-btn" type="submit">
+                <i data-lucide="plus" aria-hidden="true"></i>
+                Add Cigarette
+            </button>
+        </form>
+    </div>
+</div>
+
+
+<!-- MANAGE CIGARETTES -->
+<div class="modal-overlay" id="manageModal" aria-hidden="true">
+    <div class="modal manage-modal" role="dialog" aria-modal="true" aria-labelledby="manageModalTitle">
+
+        <div class="modal-header">
+            <div>
+                <p class="eyebrow">CIGARETTES</p>
+                <h2 id="manageModalTitle">Manage Cigarettes</h2>
+                <p class="modal-subtitle">Tap a cigarette to open Edit Settings.</p>
+            </div>
+
+            <button class="icon-btn" id="closeManageModal" type="button" aria-label="Close">
+                <i data-lucide="x" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <div id="manageCigaretteList" class="manage-cigarette-list"></div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

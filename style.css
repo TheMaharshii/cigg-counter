@@ -1,0 +1,959 @@
+:root {
+    --bg: #0a0d10;
+    --surface: #11161b;
+    --surface-2: #151b21;
+    --surface-3: #192129;
+    --border: #252d35;
+    --border-strong: #303a44;
+    --text: #f1f4f7;
+    --muted: #8e98a2;
+    --accent: #55c5ff;
+    --accent-soft: rgba(85, 197, 255, 0.14);
+    --danger: #ff6871;
+    --radius: 18px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    background: var(--bg);
+    color-scheme: dark;
+}
+
+body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background:
+        radial-gradient(circle at top, rgba(85, 197, 255, 0.055), transparent 32rem),
+        var(--bg);
+    color: var(--text);
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.app {
+    width: 100%;
+    max-width: 680px;
+    margin: 0 auto;
+    padding:
+        max(20px, env(safe-area-inset-top))
+        16px
+        calc(40px + env(safe-area-inset-bottom));
+}
+
+/* HEADER */
+
+.app-header {
+    padding: 8px 2px 24px;
+}
+
+.app-header h1 {
+    font-size: clamp(24px, 7vw, 30px);
+    line-height: 1.1;
+    letter-spacing: -0.6px;
+}
+
+.subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+/* COMMON */
+
+.card {
+    background: rgba(17, 22, 27, 0.92);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.section {
+    margin-top: 30px;
+}
+
+.section-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.section-heading > svg {
+    width: 20px;
+    height: 20px;
+    color: var(--muted);
+    flex: 0 0 auto;
+}
+
+.eyebrow {
+    color: var(--accent);
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+    margin-bottom: 6px;
+}
+
+h2 {
+    font-size: 18px;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+/* TODAY */
+
+.today-card {
+    padding: 18px;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 20px;
+}
+
+.summary-item {
+    min-width: 0;
+}
+
+.summary-item + .summary-item {
+    border-left: 1px solid var(--border);
+    padding-left: 14px;
+}
+
+.summary-item strong {
+    display: block;
+    font-size: clamp(20px, 6vw, 25px);
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+}
+
+.summary-item span {
+    display: block;
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+/* HEADER ACTIONS */
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: 0 0 auto;
+}
+
+.secondary-btn {
+    min-height: 40px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 11px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.secondary-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.secondary-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* SELECT */
+
+.selector-wrapper {
+    margin-bottom: 12px;
+}
+
+.selector-wrapper label {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    margin-bottom: 7px;
+}
+
+select {
+    width: 100%;
+    min-height: 52px;
+    padding: 0 42px 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background-color: var(--surface);
+    color: var(--text);
+    outline: none;
+    appearance: none;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position:
+        calc(100% - 19px) 22px,
+        calc(100% - 14px) 22px;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+}
+
+/* SESSION */
+
+.session-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.session-item {
+    min-width: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    padding: 13px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 10px;
+}
+
+.session-item-info {
+    min-width: 0;
+}
+
+.session-item-name {
+    font-size: 14px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.session-item-price {
+    display: inline-block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.session-item-price:hover {
+    color: var(--accent);
+}
+
+.session-controls {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.quantity-btn {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-2);
+    color: var(--text);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quantity-btn:active {
+    transform: scale(0.95);
+}
+
+.quantity-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.quantity-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.session-quantity {
+    min-width: 20px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.session-item-cost {
+    min-width: 56px;
+    text-align: right;
+    font-size: 14px;
+    font-weight: 750;
+}
+
+/* TOTAL */
+
+.session-total {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-top: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.session-total > div {
+    padding: 15px;
+}
+
+.session-total > div + div {
+    border-left: 1px solid var(--border);
+}
+
+.session-total span {
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
+    margin-bottom: 4px;
+}
+
+.session-total strong {
+    font-size: 18px;
+}
+
+/* BUTTONS */
+
+.primary-btn {
+    width: 100%;
+    min-height: 52px;
+    margin-top: 10px;
+    border: 0;
+    border-radius: 13px;
+    background: var(--accent);
+    color: #061017;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.primary-btn:active {
+    transform: scale(0.985);
+}
+
+.primary-btn svg {
+    width: 17px;
+    height: 17px;
+}
+
+/* EMPTY */
+
+.empty-state {
+    border: 1px dashed var(--border);
+    border-radius: 15px;
+    padding: 30px 18px;
+    text-align: center;
+    color: var(--muted);
+}
+
+.empty-state svg {
+    width: 22px;
+    height: 22px;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    font-size: 12px;
+}
+
+/* HISTORY */
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.history-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    padding: 15px;
+}
+
+.history-time {
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 750;
+    margin-bottom: 10px;
+}
+
+.history-cigarette {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+    font-size: 12px;
+}
+
+.history-cigarette span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-cigarette span:last-child {
+    flex: 0 0 auto;
+    font-weight: 700;
+}
+
+.history-total {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    border-top: 1px solid var(--border);
+    margin-top: 9px;
+    padding-top: 9px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.history-total strong {
+    color: var(--text);
+}
+
+/* MODALS */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    background: rgba(0, 0, 0, 0.72);
+    overscroll-behavior: contain;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal {
+    width: min(100%, 560px);
+    max-height: min(92dvh, 760px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: #10151a;
+    border: 1px solid var(--border-strong);
+    border-radius: 20px;
+    padding: 18px;
+    box-shadow: 0 20px 70px rgba(0, 0, 0, 0.55);
+}
+
+.modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    font-size: 19px;
+}
+
+.icon-btn {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn:hover {
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+.icon-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* FORM */
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    margin-bottom: 7px;
+}
+
+input {
+    width: 100%;
+    min-height: 50px;
+    padding: 0 13px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+}
+
+input:focus {
+    border-color: var(--accent);
+}
+
+input::placeholder {
+    color: #59636d;
+}
+
+.price-input {
+    display: flex;
+    align-items: center;
+    min-height: 50px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    overflow: hidden;
+}
+
+.price-input:focus-within {
+    border-color: var(--accent);
+}
+
+.price-input span {
+    color: var(--muted);
+    padding-left: 13px;
+}
+
+.price-input input {
+    min-height: 48px;
+    border: 0;
+    background: transparent;
+}
+
+/* MANAGE LIST */
+
+.manage-cigarette-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.manage-cigarette {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(88px, 110px);
+    grid-template-areas:
+        "name price"
+        "actions actions";
+    gap: 8px;
+    padding: 13px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+}
+
+.manage-name {
+    grid-area: name;
+    min-width: 0;
+}
+
+.price-field {
+    grid-area: price;
+    min-width: 0;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface-2);
+    overflow: hidden;
+}
+
+.price-field span {
+    color: var(--muted);
+    padding-left: 11px;
+    font-size: 13px;
+}
+
+.price-field input {
+    min-height: 48px;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    padding-left: 7px;
+}
+
+.manage-actions {
+    grid-area: actions;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+}
+
+.manage-save-btn,
+.manage-delete-btn {
+    min-height: 46px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.manage-save-btn {
+    color: var(--accent);
+}
+
+.manage-delete-btn {
+    color: var(--danger);
+}
+
+.manage-save-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.manage-delete-btn:hover {
+    border-color: var(--danger);
+    background: rgba(255, 104, 113, 0.08);
+}
+
+.manage-save-btn svg,
+.manage-delete-btn svg {
+    width: 17px;
+    height: 17px;
+}
+
+/* MOBILE-FIRST REFINEMENTS */
+
+@media (max-width: 520px) {
+    .app {
+        max-width: none;
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .app-header {
+        padding-top: 4px;
+    }
+
+    .section {
+        margin-top: 26px;
+    }
+
+    .today-card {
+        padding: 16px;
+    }
+
+    .header-actions {
+        gap: 6px;
+    }
+
+    .secondary-btn {
+        width: 42px;
+        height: 42px;
+        min-height: 42px;
+        padding: 0;
+    }
+
+    .secondary-btn span {
+        display: none;
+    }
+
+    .secondary-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .session-item {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "info cost"
+            "controls controls";
+        gap: 10px;
+    }
+
+    .session-item-info {
+        grid-area: info;
+    }
+
+    .session-controls {
+        grid-area: controls;
+        justify-content: flex-start;
+    }
+
+    .session-item-cost {
+        grid-area: cost;
+    }
+
+    .quantity-btn {
+        width: 42px;
+        height: 42px;
+    }
+
+    .session-quantity {
+        min-width: 30px;
+        font-size: 16px;
+    }
+
+    .session-total > div {
+        padding: 14px;
+    }
+
+    .session-total strong {
+        font-size: 17px;
+    }
+
+    .modal-overlay {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .modal {
+        width: 100%;
+        border-radius: 18px;
+        padding: 16px;
+    }
+
+    .manage-cigarette {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "name"
+            "price"
+            "actions";
+    }
+
+    .price-field {
+        width: 100%;
+    }
+
+    .manage-actions {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 360px) {
+    .summary-item strong {
+        font-size: 18px;
+    }
+
+    .summary-item span {
+        font-size: 10px;
+    }
+
+    .session-item {
+        padding: 11px;
+    }
+
+    .session-total strong {
+        font-size: 16px;
+    }
+}
+
+
+/* =========================================================
+   MANAGE CIGARETTE ACCORDION
+   ========================================================= */
+
+.modal-subtitle {
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 5px;
+}
+
+.manage-cigarette {
+    display: block;
+    padding: 0;
+    overflow: hidden;
+}
+
+.manage-cigarette-main {
+    min-height: 58px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 12px;
+}
+
+.manage-cigarette-name {
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.manage-cigarette-price {
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.manage-expand-btn {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--muted);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.manage-expand-btn svg {
+    width: 17px;
+    height: 17px;
+    transition: transform 160ms ease;
+}
+
+.manage-cigarette.open .manage-expand-btn {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.manage-cigarette.open .manage-expand-btn svg {
+    transform: rotate(180deg);
+}
+
+.manage-settings {
+    display: none;
+    padding: 0 12px 12px;
+    border-top: 1px solid var(--border);
+}
+
+.manage-cigarette.open .manage-settings {
+    display: block;
+}
+
+.manage-settings-label {
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
+    margin: 12px 0 6px;
+}
+
+.manage-settings .manage-name,
+.manage-settings .price-field {
+    width: 100%;
+}
+
+.manage-settings .manage-name {
+    min-height: 48px;
+}
+
+.manage-settings .price-field {
+    min-height: 48px;
+}
+
+.manage-settings-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-top: 9px;
+}
+
+@media (max-width: 360px) {
+    .manage-cigarette-main {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .manage-cigarette-price {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        padding-bottom: 2px;
+    }
+
+    .manage-expand-btn {
+        grid-column: 2;
+        grid-row: 1;
+    }
+}
+
+
+/* =========================================================
+   MOTION / UX POLISH
+   ========================================================= */
+
+button,
+select,
+input,
+.session-item,
+.history-card,
+.today-card,
+.secondary-btn,
+.primary-btn,
+.icon-btn,
+.manage-cigarette {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button {
+    touch-action: manipulation;
+}
+
+.is-animating {
+    will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
