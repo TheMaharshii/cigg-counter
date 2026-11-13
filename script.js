@@ -81,6 +81,9 @@ let completedSessions = loadData(
    ========================================================= */
 
 const cigaretteSelect = document.getElementById("cigaretteSelect");
+const purchaserNameInput = document.getElementById("purchaserName");
+const addToSessionBtn = document.getElementById("addToSessionBtn");
+const sessionTotalPeople = document.getElementById("sessionTotalPeople");
 const sessionItems = document.getElementById("sessionItems");
 
 const sessionTotalCigarettes =
@@ -154,6 +157,7 @@ function initialize() {
     renderHistory();
     updateTodaySummary();
     refreshIcons();
+    updateAddButtonState();
 }
 
 
@@ -281,6 +285,20 @@ function migrateData() {
             VERSION
         );
     }
+
+    Object.values(currentSession).forEach(item => {
+        if (!item.cigaretteId) {
+            item.cigaretteId = item.id;
+        }
+        if (typeof item.purchaser !== "string") {
+            item.purchaser = "";
+        }
+    });
+
+    saveData(
+        STORAGE_KEYS.currentSession,
+        currentSession
+    );
 
     ensureDefaultCigarettes();
 }
@@ -427,8 +445,17 @@ function renderCigaretteSelect() {
 
 cigaretteSelect.addEventListener(
     "change",
-    () => {
+    updateAddButtonState
+);
 
+purchaserNameInput.addEventListener(
+    "input",
+    updateAddButtonState
+);
+
+addToSessionBtn.addEventListener(
+    "click",
+    () => {
         const id =
             cigaretteSelect.value;
 
@@ -436,13 +463,42 @@ cigaretteSelect.addEventListener(
             return;
         }
 
-        addCigaretteToSession(id);
+        const purchaser =
+            purchaserNameInput.value.trim();
 
+        addCigaretteToSession(
+            id,
+            purchaser
+        );
+
+        purchaserNameInput.value = "";
         cigaretteSelect.value = "";
+        updateAddButtonState();
     }
 );
 
-function addCigaretteToSession(id) {
+purchaserNameInput.addEventListener(
+    "keydown",
+    event => {
+        if (
+            event.key === "Enter" &&
+            cigaretteSelect.value
+        ) {
+            event.preventDefault();
+            addToSessionBtn.click();
+        }
+    }
+);
+
+function updateAddButtonState() {
+    addToSessionBtn.disabled =
+        !cigaretteSelect.value;
+}
+
+function addCigaretteToSession(
+    id,
+    purchaser = ""
+) {
     const cigarette =
         getCigaretteById(id);
 
@@ -450,24 +506,49 @@ function addCigaretteToSession(id) {
         return;
     }
 
-    if (!currentSession[id]) {
-        currentSession[id] = {
-            id: id,
+    const normalizedPurchaser =
+        purchaser.trim();
+
+    /*
+     * Same cigarette + same buyer = same line.
+     * Same cigarette + different buyer = separate line.
+     */
+    const existingKey =
+        Object.keys(currentSession).find(
+            key => {
+                const item =
+                    currentSession[key];
+
+                return (
+                    (item.cigaretteId || item.id) === id &&
+                    String(item.purchaser || "")
+                        .trim()
+                        .toLowerCase() ===
+                        normalizedPurchaser.toLowerCase()
+                );
+            }
+        );
+
+    if (existingKey) {
+        currentSession[existingKey].quantity += 1;
+    } else {
+        const sessionItemId =
+            generateId();
+
+        currentSession[sessionItemId] = {
+            id: sessionItemId,
+            cigaretteId: id,
             name: cigarette.name,
-            price: Number(
-                cigarette.price
-            ),
+            purchaser: normalizedPurchaser,
+            price: Number(cigarette.price),
             quantity: 1
         };
-    } else {
-        currentSession[id].quantity += 1;
     }
 
     saveCurrentSession();
     renderSessionItems();
     updateSessionTotals();
 }
-
 
 /* =========================================================
    11. CURRENT SESSION STORAGE
@@ -523,14 +604,30 @@ function renderSessionItems() {
                     ${escapeHTML(item.name)}
                 </div>
 
+                <div class="session-item-meta">
+                    ${
+                        item.purchaser
+                            ? `
+                                <span class="buyer-name">
+                                    ${escapeHTML(item.purchaser)}
+                                </span>
+                                <span class="buyer-dot"></span>
+                            `
+                            : ""
+                    }
+                    <span>
+                        ${formatCurrency(item.price)}
+                        per cigarette
+                    </span>
+                </div>
+
                 <button
                     type="button"
                     class="session-item-price"
                     data-price-id="${item.id}"
                     aria-label="Edit price for ${escapeHTML(item.name)}"
                 >
-                    ${formatCurrency(item.price)}
-                    per cigarette
+                    Edit price
                 </button>
             </div>
 
@@ -722,6 +819,9 @@ function getTotalCost() {
 }
 
 function updateSessionTotals() {
+    const items =
+        Object.values(currentSession);
+
     sessionTotalCigarettes.textContent =
         getTotalCigarettes();
 
@@ -729,6 +829,22 @@ function updateSessionTotals() {
         formatCurrency(
             getTotalCost()
         );
+
+    const people =
+        new Set(
+            items
+                .map(item =>
+                    String(
+                        item.purchaser || ""
+                    ).trim()
+                )
+                .filter(Boolean)
+        ).size;
+
+    sessionTotalPeople.textContent =
+        people;
+
+    updateAddButtonState();
 }
 
 
@@ -760,8 +876,9 @@ function saveSession() {
 
         cigarettes:
             items.map(item => ({
-                id: item.id,
+                id: item.cigaretteId || item.id,
                 name: item.name,
+                purchaser: item.purchaser || "",
                 price: item.price,
                 quantity: item.quantity,
                 total:
@@ -794,7 +911,28 @@ function saveSession() {
     renderHistory();
     updateTodaySummary();
 
-    alert("Session saved.");
+    showSaveFeedback();
+}
+
+
+function showSaveFeedback() {
+    const originalHTML =
+        saveSessionBtn.innerHTML;
+
+    saveSessionBtn.innerHTML = `
+        <i data-lucide="check"></i>
+        Session saved
+    `;
+
+    saveSessionBtn.disabled = true;
+    refreshIcons();
+
+    setTimeout(() => {
+        saveSessionBtn.innerHTML =
+            originalHTML;
+        saveSessionBtn.disabled = false;
+        refreshIcons();
+    }, 1200);
 }
 
 
@@ -882,13 +1020,27 @@ function renderHistory() {
 
                 cigaretteHTML += `
                     <div class="history-cigarette">
-                        <span>
-                            ${escapeHTML(
-                                cigarette.name
-                            )}
-                            ×
-                            ${cigarette.quantity}
-                        </span>
+                        <div class="history-cigarette-info">
+                            <span>
+                                ${escapeHTML(
+                                    cigarette.name
+                                )}
+                                ×
+                                ${cigarette.quantity}
+                            </span>
+
+                            ${
+                                cigarette.purchaser
+                                    ? `
+                                        <div class="history-buyer">
+                                            Bought by ${escapeHTML(
+                                                cigarette.purchaser
+                                            )}
+                                        </div>
+                                    `
+                                    : ""
+                            }
+                        </div>
 
                         <span>
                             ${formatCurrency(
@@ -1404,17 +1556,20 @@ function saveEditedCigarette(id) {
      * The current session price
      * is intentionally preserved.
      */
-    if (
-        currentSession[id]
-    ) {
-        currentSession[id].name =
-            newName;
+    Object.values(currentSession).forEach(
+        item => {
+            if (
+                (item.cigaretteId || item.id) === id
+            ) {
+                item.name = newName;
+            }
+        }
+    );
 
-        saveCurrentSession();
+    saveCurrentSession();
 
-        renderSessionItems();
-        updateSessionTotals();
-    }
+    renderSessionItems();
+    updateSessionTotals();
 
     renderCigaretteSelect();
     renderManageCigarettes();
@@ -1455,16 +1610,25 @@ function deleteCigarette(id) {
      * If it exists in the current
      * unsaved session, remove it too.
      */
-    if (
-        currentSession[id]
-    ) {
-        delete currentSession[id];
+    Object.keys(currentSession).forEach(
+        sessionItemId => {
+            const item =
+                currentSession[sessionItemId];
 
-        saveCurrentSession();
+            if (
+                (item.cigaretteId || item.id) === id
+            ) {
+                delete currentSession[
+                    sessionItemId
+                ];
+            }
+        }
+    );
 
-        renderSessionItems();
-        updateSessionTotals();
-    }
+    saveCurrentSession();
+
+    renderSessionItems();
+    updateSessionTotals();
 
     saveData(
         STORAGE_KEYS.cigarettes,
@@ -1765,7 +1929,7 @@ function animateInitialPage() {
 
     const blocks =
         document.querySelectorAll(
-            ".app-header, .today-card, .section"
+            ".app-header, .today-card, .section, .quick-add-card, .session-summary"
         );
 
     gsap.fromTo(
@@ -2034,8 +2198,14 @@ cigaretteSelect.addEventListener(
 const originalAddCigaretteToSession =
     addCigaretteToSession;
 
-addCigaretteToSession = function (id) {
-    originalAddCigaretteToSession(id);
+addCigaretteToSession = function (
+    id,
+    purchaser = ""
+) {
+    originalAddCigaretteToSession(
+        id,
+        purchaser
+    );
 
     if (
         prefersReducedMotion

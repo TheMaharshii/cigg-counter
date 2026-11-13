@@ -957,3 +957,247 @@ button {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* Purchaser */
+.purchaser-wrapper { margin-top: 10px; }
+.purchaser-wrapper input { min-height: 52px; }
+
+.session-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 10px;
+    min-width: 0;
+}
+.session-item-meta .buyer-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.buyer-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex: 0 0 auto;
+}
+.history-cigarette-info { min-width: 0; }
+.history-buyer {
+    color: var(--muted);
+    font-size: 10px;
+    margin-top: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* =========================================================
+   UX REFINEMENT — QUICK ADD + CURRENT SUMMARY
+   ========================================================= */
+
+.session-summary {
+    margin: -2px 0 12px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(85, 197, 255, 0.10),
+            rgba(17, 22, 27, 0.94) 58%
+        );
+}
+
+.session-summary-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.session-summary-main > div + div {
+    border-left: 1px solid var(--border);
+    padding-left: 12px;
+}
+
+.session-summary-main strong {
+    display: block;
+    font-size: 24px;
+    line-height: 1;
+    margin-top: 5px;
+}
+
+.session-summary-main small {
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.session-summary-cost strong {
+    color: var(--accent);
+}
+
+.summary-label {
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.1px;
+}
+
+.session-summary-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 13px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.session-summary-meta > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.session-summary-meta svg {
+    width: 13px;
+    height: 13px;
+}
+
+.summary-status {
+    color: var(--accent);
+}
+
+.quick-add-card {
+    padding: 14px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+}
+
+.quick-add-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 13px;
+}
+
+.quick-add-title h3 {
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+.quick-add-title > svg {
+    width: 20px;
+    height: 20px;
+    color: var(--accent);
+}
+
+.quick-add-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+}
+
+.quick-field label {
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
+    margin-bottom: 6px;
+}
+
+.quick-field input,
+.quick-field select {
+    min-height: 50px;
+}
+
+.quick-field select {
+    padding-left: 11px;
+    padding-right: 34px;
+}
+
+.add-session-btn {
+    width: 100%;
+    min-height: 49px;
+    margin-top: 10px;
+    border: 1px solid rgba(85, 197, 255, 0.38);
+    border-radius: 12px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 800;
+    transition:
+        opacity 160ms ease,
+        border-color 160ms ease,
+        background 160ms ease;
+}
+
+.add-session-btn svg {
+    width: 17px;
+    height: 17px;
+}
+
+.add-session-btn:disabled {
+    opacity: 0.42;
+    border-color: var(--border);
+    color: var(--muted);
+    background: var(--surface-2);
+}
+
+.quick-add-hint {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 9px;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.session-items {
+    margin-top: 4px;
+}
+
+.session-item {
+    transition:
+        border-color 160ms ease,
+        background 160ms ease;
+}
+
+.session-item:active {
+    background: var(--surface-2);
+}
+
+.session-item-price {
+    border: 0;
+    background: transparent;
+    padding: 0;
+}
+
+@media (max-width: 390px) {
+    .quick-add-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-field select,
+    .quick-field input {
+        min-height: 48px;
+    }
+
+    .session-summary-main strong {
+        font-size: 22px;
+    }
+}
+
+@media (min-width: 521px) {
+    .quick-add-card {
+        padding: 16px;
+    }
+}

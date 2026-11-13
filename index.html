@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0b0d0f">
-    <title>Cigarette Tracker 101</title>
+    <title>Cigarette Tracker</title>
 
     <!-- Lucide SVG icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -20,7 +20,7 @@
         <div>
             <p class="eyebrow">TRACKER</p>
             <h1>Cigarette Tracker</h1>
-            <p class="subtitle">Current smoking session</p>
+            <p class="subtitle">Quickly record who bought what.</p>
         </div>
     </header>
 
@@ -71,25 +71,75 @@
             </div>
         </div>
 
-        <div class="selector-wrapper">
-            <label for="cigaretteSelect">Add cigarette to session</label>
-            <select id="cigaretteSelect">
-                <option value="">Select cigarette</option>
-            </select>
+        <div class="session-summary" aria-label="Current session summary">
+            <div class="session-summary-main">
+                <div>
+                    <span class="summary-label">CURRENT TOTAL</span>
+                    <strong id="sessionTotalCigarettes">0</strong>
+                    <small>cigarettes</small>
+                </div>
+                <div class="session-summary-cost">
+                    <span class="summary-label">SPENT</span>
+                    <strong id="sessionTotalCost">₹0</strong>
+                </div>
+            </div>
+
+            <div class="session-summary-meta">
+                <span>
+                    <i data-lucide="users" aria-hidden="true"></i>
+                    <span id="sessionTotalPeople">0</span> people
+                </span>
+                <span class="summary-status">
+                    <i data-lucide="circle-dot" aria-hidden="true"></i>
+                    Current session
+                </span>
+            </div>
+        </div>
+
+        <div class="quick-add-card">
+            <div class="quick-add-title">
+                <div>
+                    <p class="eyebrow">QUICK ADD</p>
+                    <h3>Add what was bought</h3>
+                </div>
+                <i data-lucide="plus-circle" aria-hidden="true"></i>
+            </div>
+
+            <div class="quick-add-fields">
+                <div class="quick-field">
+                    <label for="purchaserName">Who bought it?</label>
+                    <input
+                        type="text"
+                        id="purchaserName"
+                        placeholder="Name (optional)"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="quick-field">
+                    <label for="cigaretteSelect">Cigarette</label>
+                    <select id="cigaretteSelect">
+                        <option value="">Choose cigarette</option>
+                    </select>
+                </div>
+            </div>
+
+            <button
+                class="add-session-btn"
+                id="addToSessionBtn"
+                type="button"
+                disabled
+            >
+                <i data-lucide="plus" aria-hidden="true"></i>
+                Add to session
+            </button>
+
+            <p class="quick-add-hint">
+                Same person + same cigarette will be combined automatically.
+            </p>
         </div>
 
         <div id="sessionItems" class="session-items"></div>
-
-        <div class="session-total">
-            <div>
-                <span>Total Cigarettes</span>
-                <strong id="sessionTotalCigarettes">0</strong>
-            </div>
-            <div>
-                <span>Total Cost</span>
-                <strong id="sessionTotalCost">₹0</strong>
-            </div>
-        </div>
 
         <button class="primary-btn" id="saveSessionBtn" type="button">
             <i data-lucide="save" aria-hidden="true"></i>
@@ -174,7 +224,7 @@
             <div>
                 <p class="eyebrow">CIGARETTES</p>
                 <h2 id="manageModalTitle">Manage Cigarettes</h2>
-                <p class="modal-subtitle">Tap a cigarette to open Edit Settings.</p>
+                <p class="modal-subtitle">Tap a cigarette to edit its name or price.</p>
             </div>
 
             <button class="icon-btn" id="closeManageModal" type="button" aria-label="Close">
