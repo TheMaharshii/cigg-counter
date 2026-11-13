@@ -1,238 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#0b0d0f">
-    <title>Cigarette Tracker</title>
-
-    <!-- Lucide SVG icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
-
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d0f">
+<title>Tapri</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
 </head>
-
 <body>
 <div class="app">
-
     <header class="app-header">
         <div>
-            <p class="eyebrow">TRACKER</p>
-            <h1>Cigarette Tracker</h1>
-            <p class="subtitle">Quickly record who bought what.</p>
+            <p class="eyebrow">TAPRI</p>
+            <h1>Tapri</h1>
+            <p class="subtitle">Track what the gang bought, who bought it, and how much.</p>
         </div>
     </header>
 
-    <!-- TODAY -->
     <section class="card today-card">
         <div class="section-heading">
             <div>
                 <p class="eyebrow">TODAY</p>
-                <h2>Consumption</h2>
+                <h2>Group Summary</h2>
             </div>
-            <i data-lucide="calendar-days" aria-hidden="true"></i>
+            <i data-lucide="calendar-days"></i>
         </div>
-
         <div class="summary-grid">
-            <div class="summary-item">
-                <strong id="todayCigarettes">0</strong>
-                <span>Cigarettes</span>
-            </div>
-            <div class="summary-item">
-                <strong id="todayCost">₹0</strong>
-                <span>Spent</span>
-            </div>
-            <div class="summary-item">
-                <strong id="todaySessions">0</strong>
-                <span>Sessions</span>
-            </div>
+            <div class="summary-item"><strong id="todayItems">0</strong><span>Items</span></div>
+            <div class="summary-item"><strong id="todayCost">₹0</strong><span>Spent</span></div>
+            <div class="summary-item"><strong id="todaySessions">0</strong><span>Sessions</span></div>
+            <div class="summary-item"><strong id="todayPeople">0</strong><span>Friends</span></div>
         </div>
     </section>
 
-    <!-- CURRENT SESSION -->
     <section class="section">
         <div class="section-heading">
             <div>
                 <p class="eyebrow">CURRENT SESSION</p>
-                <h2>Consumed</h2>
+                <h2>Tapri Bill</h2>
             </div>
-
             <div class="header-actions">
-                <button class="secondary-btn" id="manageCigarettesBtn" type="button">
-                    <i data-lucide="settings-2" aria-hidden="true"></i>
-                    <span>Manage</span>
+                <button class="secondary-btn" id="managePeopleBtn" type="button">
+                    <i data-lucide="users"></i><span>People</span>
                 </button>
-
-                <button class="secondary-btn" id="addCigaretteBtn" type="button">
-                    <i data-lucide="plus" aria-hidden="true"></i>
-                    <span>Add</span>
+                <button class="secondary-btn" id="manageItemsBtn" type="button">
+                    <i data-lucide="list-plus"></i><span>Items</span>
                 </button>
             </div>
         </div>
 
-        <div class="session-summary" aria-label="Current session summary">
+        <div class="session-summary">
             <div class="session-summary-main">
-                <div>
-                    <span class="summary-label">CURRENT TOTAL</span>
-                    <strong id="sessionTotalCigarettes">0</strong>
-                    <small>cigarettes</small>
-                </div>
-                <div class="session-summary-cost">
-                    <span class="summary-label">SPENT</span>
-                    <strong id="sessionTotalCost">₹0</strong>
-                </div>
+                <div><span class="summary-label">TOTAL</span><strong id="sessionTotalItems">0</strong><small>items</small></div>
+                <div class="session-summary-cost"><span class="summary-label">BILL</span><strong id="sessionTotalCost">₹0</strong></div>
             </div>
-
             <div class="session-summary-meta">
-                <span>
-                    <i data-lucide="users" aria-hidden="true"></i>
-                    <span id="sessionTotalPeople">0</span> people
-                </span>
-                <span class="summary-status">
-                    <i data-lucide="circle-dot" aria-hidden="true"></i>
-                    Current session
-                </span>
+                <span><i data-lucide="users"></i><span id="sessionTotalPeople">0</span> friends</span>
+                <span class="summary-status"><i data-lucide="circle-dot"></i>Current session</span>
             </div>
         </div>
 
         <div class="quick-add-card">
             <div class="quick-add-title">
-                <div>
-                    <p class="eyebrow">QUICK ADD</p>
-                    <h3>Add what was bought</h3>
-                </div>
-                <i data-lucide="plus-circle" aria-hidden="true"></i>
+                <div><p class="eyebrow">QUICK ADD</p><h3>Who bought what?</h3></div>
+                <i data-lucide="shopping-bag"></i>
             </div>
-
             <div class="quick-add-fields">
                 <div class="quick-field">
-                    <label for="purchaserName">Who bought it?</label>
-                    <input
-                        type="text"
-                        id="purchaserName"
-                        placeholder="Name (optional)"
-                        autocomplete="off"
-                    >
+                    <label for="personSelect">Friend</label>
+                    <select id="personSelect"><option value="">Choose friend</option></select>
                 </div>
-
                 <div class="quick-field">
-                    <label for="cigaretteSelect">Cigarette</label>
-                    <select id="cigaretteSelect">
-                        <option value="">Choose cigarette</option>
-                    </select>
+                    <label for="itemSelect">Item</label>
+                    <select id="itemSelect"><option value="">Choose item</option></select>
                 </div>
             </div>
-
-            <button
-                class="add-session-btn"
-                id="addToSessionBtn"
-                type="button"
-                disabled
-            >
-                <i data-lucide="plus" aria-hidden="true"></i>
-                Add to session
+            <button class="add-session-btn" id="addToSessionBtn" type="button" disabled>
+                <i data-lucide="plus"></i> Add to session
             </button>
-
-            <p class="quick-add-hint">
-                Same person + same cigarette will be combined automatically.
-            </p>
+            <p class="quick-add-hint">Pick a friend and an item. Add the same pair again to increase its quantity.</p>
         </div>
 
         <div id="sessionItems" class="session-items"></div>
 
         <button class="primary-btn" id="saveSessionBtn" type="button">
-            <i data-lucide="save" aria-hidden="true"></i>
-            Save Session
+            <i data-lucide="save"></i> Save session
         </button>
     </section>
 
-    <!-- HISTORY -->
     <section class="section history-section">
         <div class="section-heading">
-            <div>
-                <p class="eyebrow">HISTORY</p>
-                <h2>Today's Sessions</h2>
-            </div>
-            <i data-lucide="history" aria-hidden="true"></i>
+            <div><p class="eyebrow">HISTORY</p><h2>Today's Sessions</h2></div>
+            <i data-lucide="history"></i>
         </div>
-
         <div id="historyList" class="history-list"></div>
     </section>
-
 </div>
 
-
-<!-- ADD CIGARETTE -->
-<div class="modal-overlay" id="addModal" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
-
+<!-- ADD ITEM -->
+<div class="modal-overlay" id="addItemModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="addItemTitle">
         <div class="modal-header">
-            <div>
-                <p class="eyebrow">NEW CIGARETTE</p>
-                <h2 id="addModalTitle">Add Cigarette</h2>
-            </div>
-
-            <button class="icon-btn" id="closeModalBtn" type="button" aria-label="Close">
-                <i data-lucide="x" aria-hidden="true"></i>
-            </button>
+            <div><p class="eyebrow">NEW ITEM</p><h2 id="addItemTitle">Add Item</h2></div>
+            <button class="icon-btn" id="closeAddItem" type="button" aria-label="Close"><i data-lucide="x"></i></button>
         </div>
-
-        <form id="addCigaretteForm">
-            <div class="form-group">
-                <label for="cigaretteName">Cigarette Name</label>
-                <input
-                    type="text"
-                    id="cigaretteName"
-                    placeholder="e.g. Classic"
-                    autocomplete="off"
-                    required
-                >
+        <form id="addItemForm">
+            <div class="form-group"><label for="itemName">Item name</label><input id="itemName" placeholder="e.g. Chai, Maggi, Double Switch" required></div>
+            <div class="form-group"><label for="itemCategory">Category</label>
+                <select id="itemCategory"><option value="cigarette">Cigarette</option><option value="chai">Chai</option><option value="food">Food</option><option value="other">Other</option></select>
             </div>
-
-            <div class="form-group">
-                <label for="cigarettePrice">Default price per cigarette</label>
-
-                <div class="price-input">
-                    <span>₹</span>
-                    <input
-                        type="number"
-                        id="cigarettePrice"
-                        placeholder="28"
-                        min="0"
-                        step="0.01"
-                        inputmode="decimal"
-                        required
-                    >
-                </div>
-            </div>
-
-            <button class="primary-btn" type="submit">
-                <i data-lucide="plus" aria-hidden="true"></i>
-                Add Cigarette
-            </button>
+            <div class="form-group"><label for="itemPrice">Default price</label><div class="price-input"><span>₹</span><input id="itemPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="28" required></div></div>
+            <button class="primary-btn" type="submit"><i data-lucide="plus"></i> Add item</button>
         </form>
     </div>
 </div>
 
-
-<!-- MANAGE CIGARETTES -->
-<div class="modal-overlay" id="manageModal" aria-hidden="true">
-    <div class="modal manage-modal" role="dialog" aria-modal="true" aria-labelledby="manageModalTitle">
-
+<!-- MANAGE ITEMS -->
+<div class="modal-overlay" id="itemsModal" aria-hidden="true">
+    <div class="modal manage-modal" role="dialog" aria-modal="true" aria-labelledby="itemsTitle">
         <div class="modal-header">
-            <div>
-                <p class="eyebrow">CIGARETTES</p>
-                <h2 id="manageModalTitle">Manage Cigarettes</h2>
-                <p class="modal-subtitle">Tap a cigarette to edit its name or price.</p>
-            </div>
-
-            <button class="icon-btn" id="closeManageModal" type="button" aria-label="Close">
-                <i data-lucide="x" aria-hidden="true"></i>
-            </button>
+            <div><p class="eyebrow">ITEMS</p><h2 id="itemsTitle">Manage Items</h2><p class="modal-subtitle">Tap an item to edit its name, category, or price.</p></div>
+            <div class="modal-actions"><button class="icon-btn" id="addItemFromManage" type="button" aria-label="Add item"><i data-lucide="plus"></i></button><button class="icon-btn" id="closeItems" type="button" aria-label="Close"><i data-lucide="x"></i></button></div>
         </div>
+        <div id="manageItemsList" class="manage-cigarette-list"></div>
+    </div>
+</div>
 
-        <div id="manageCigaretteList" class="manage-cigarette-list"></div>
+<!-- ADD PERSON -->
+<div class="modal-overlay" id="addPersonModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="addPersonTitle">
+        <div class="modal-header">
+            <div><p class="eyebrow">NEW FRIEND</p><h2 id="addPersonTitle">Add Friend</h2></div>
+            <button class="icon-btn" id="closeAddPerson" type="button" aria-label="Close"><i data-lucide="x"></i></button>
+        </div>
+        <form id="addPersonForm">
+            <div class="form-group"><label for="personName">Name</label><input id="personName" placeholder="e.g. Rahul" autocomplete="off" required></div>
+            <button class="primary-btn" type="submit"><i data-lucide="user-plus"></i> Add friend</button>
+        </form>
+    </div>
+</div>
+
+<!-- MANAGE PEOPLE -->
+<div class="modal-overlay" id="peopleModal" aria-hidden="true">
+    <div class="modal manage-modal" role="dialog" aria-modal="true" aria-labelledby="peopleTitle">
+        <div class="modal-header">
+            <div><p class="eyebrow">FRIENDS</p><h2 id="peopleTitle">Manage Friends</h2><p class="modal-subtitle">Tap a friend to rename or delete them.</p></div>
+            <div class="modal-actions"><button class="icon-btn" id="addPersonFromManage" type="button" aria-label="Add friend"><i data-lucide="user-plus"></i></button><button class="icon-btn" id="closePeople" type="button" aria-label="Close"><i data-lucide="x"></i></button></div>
+        </div>
+        <div id="managePeopleList" class="manage-cigarette-list"></div>
     </div>
 </div>
 
