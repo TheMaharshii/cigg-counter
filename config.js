@@ -1,12 +1,9 @@
 // Tapri Supabase configuration
-// NEVER put the Supabase Secret key here.
+// This is the PUBLIC/PUBLISHABLE key.
+// Never put the Supabase Secret key here.
 
-window.TAPRI_CONFIG = {
-    SUPABASE_URL: "https://hsenslxpyuaxmdgjzklv.supabase.co",
-    SUPABASE_PUBLISHABLE_KEY: "sb_publishable_KyxP228X516cWfj8UknO_g_pdG6HnPt"
-};
+window.TAPRI_SUPABASE_URL =
+    "https://hsenslpxyuaxmdgjzklv.supabase.co";
 
-window.supabaseClient = window.supabase.createClient(
-    window.TAPRI_CONFIG.SUPABASE_URL,
-    window.TAPRI_CONFIG.SUPABASE_PUBLISHABLE_KEY
-);
+window.TAPRI_SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_KyxP228X516cWfj8UknO_g_pdG6HnPt";
