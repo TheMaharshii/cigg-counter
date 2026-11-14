@@ -1482,3 +1482,9 @@ select { appearance:auto; }
     .group-bar { align-items: flex-start; }
     .group-bar .summary-status { white-space: nowrap; }
 }
+
+#connectionStatus{
+  display:flex;
+  gap: 0.8rem;
+  align-items:center;
+}
