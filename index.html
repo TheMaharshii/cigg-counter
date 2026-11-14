@@ -19,10 +19,18 @@
             <h1>Tapri</h1>
             <p class="subtitle">Track what the gang bought, who bought it, and how much.</p>
         </div>
-        <button class="icon-btn summary-trigger" id="openSummaryBtn" type="button" aria-label="Open group summary" title="Group summary">
-            <i data-lucide="chart-pie"></i>
-        </button>
+        <div class="header-actions">
+            <button class="secondary-btn" id="shareGroupBtn" type="button" title="Share this Tapri group"><i data-lucide="share-2"></i><span>Share</span></button>
+            <button class="icon-btn summary-trigger" id="openSummaryBtn" type="button" aria-label="Open group summary" title="Group summary">
+                <i data-lucide="chart-pie"></i>
+            </button>
+        </div>
     </header>
+
+    <div class="group-bar">
+        <div><span class="eyebrow">TAPRI GROUP</span><strong id="groupNameDisplay">Loading…</strong></div>
+        <span id="connectionStatus" class="summary-status"><i data-lucide="cloud"></i>Connecting…</span>
+    </div>
 
     <section class="section">
         <div class="section-heading">
@@ -117,6 +125,27 @@
     </div>
 </div>
 
+<!-- GROUP / SHARE -->
+<div class="modal-overlay" id="groupModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="groupTitle">
+        <div class="modal-header">
+            <div><p class="eyebrow">TAPRI GROUP</p><h2 id="groupTitle">Share Tapri</h2><p class="modal-subtitle">Friends can open this link to use the same group.</p></div>
+            <button class="icon-btn" id="closeGroup" type="button" aria-label="Close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="form-group">
+            <label for="groupNameInput">Group name</label>
+            <input id="groupNameInput" maxlength="60" placeholder="e.g. Manek Chowk Gang">
+        </div>
+        <button class="primary-btn" id="saveGroupNameBtn" type="button"><i data-lucide="save"></i> Save group name</button>
+        <div class="form-group" style="margin-top:18px">
+            <label for="groupLinkInput">Group link</label>
+            <input id="groupLinkInput" readonly>
+        </div>
+        <button class="secondary-btn" id="copyGroupLinkBtn" type="button" style="width:100%;justify-content:center"><i data-lucide="copy"></i><span>Copy group link</span></button>
+        <p class="quick-add-hint">Anyone with this link can join the group. Keep it private if you don't want others to access it.</p>
+    </div>
+</div>
+
 <!-- ADD ITEM -->
 <div class="modal-overlay" id="addItemModal" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="addItemTitle">
@@ -171,6 +200,8 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

@@ -1455,3 +1455,30 @@ select { appearance:auto; }
     justify-content: flex-end;
     gap: 1rem;
 }
+/* Supabase group status */
+.group-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: -4px 0 18px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+}
+.group-bar > div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.group-bar strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+@media (max-width: 420px) {
+    .group-bar { align-items: flex-start; }
+    .group-bar .summary-status { white-space: nowrap; }
+}
