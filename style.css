@@ -1485,6 +1485,6 @@ select { appearance:auto; }
 
 #connectionStatus{
   display:flex;
-  gap: 0.5em;
+  gap: 0.4rem;
   align-items:center;
 }
