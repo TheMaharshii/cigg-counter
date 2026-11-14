@@ -1,15 +1,13 @@
 /* TAPRI — vanilla JS + Supabase */
 
+// Supabase client is initialized here from config.js.
+// config.js must define window.TAPRI_SUPABASE_URL and
+// window.TAPRI_SUPABASE_PUBLISHABLE_KEY.
 const SUPABASE_URL = window.TAPRI_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY =
-    window.TAPRI_SUPABASE_PUBLISHABLE_KEY;
+const SUPABASE_PUBLISHABLE_KEY = window.TAPRI_SUPABASE_PUBLISHABLE_KEY;
 
-if (!SUPABASE_URL) {
-    throw new Error("Supabase URL is missing.");
-}
-
-if (!SUPABASE_PUBLISHABLE_KEY) {
-    throw new Error("Supabase publishable key is missing.");
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+    throw new Error("Supabase configuration is missing.");
 }
 
 if (!window.supabase) {
