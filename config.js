@@ -1,6 +1,6 @@
 // Tapri Supabase configuration
-// This is the PUBLIC/PUBLISHABLE key.
-// Never put the Supabase Secret key here.
+// PUBLIC/PUBLISHABLE key only.
+// NEVER put the Supabase Secret key here.
 
 window.TAPRI_SUPABASE_URL =
     "https://hsenslpxyuaxmdgjzklv.supabase.co";
