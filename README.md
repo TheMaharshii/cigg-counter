@@ -1,49 +1,41 @@
 # Tapri
 
-A mobile-first expense and consumption tracker for friends at a tapri, café, or casual hangout.
+A mobile-first shared bill tracker for friends at a tapri, cafe, or casual hangout.
 
-Tapri helps a group track **what was bought, who bought it, how much it cost, and the total spent during each session**.
+Tapri tracks **what was bought, who bought it, quantities, and the bill total for each session**.
 
 ## Features
 
-- Track multiple item types:
-  - Cigarettes
-  - Chai
-  - Food
-  - Other
-- Add and manage friends/people
-- Add and manage items
-- Set default prices for items
-- Add items to the current session
-- Select who bought each item
-- Track quantities
-- Automatically combine the same item bought by the same person
-- Keep different people as separate purchases
-- View current session totals
-- View total items, spending, and participating friends
-- Save completed sessions
-- View previous sessions
-- Delete saved sessions
-- Edit item names, categories, and default prices
-- Edit friend names
-- Delete items and friends
-- Store data locally using `localStorage`
-- Mobile-first responsive interface
-- Smooth UI animations using GSAP
-- Professional SVG icons using Lucide
-- No backend required
-- Works completely offline after loading the app
+- Add and manage friends and items, with default item prices
+- Assign items to a friend and choose a quantity before adding
+- Automatically merge repeated purchases of the same item by the same friend
+- Review current item quantities, per-friend subtotals, and the session bill
+- Name a session by its place; the name is retained if the page is reloaded before saving
+- Save sessions and view today's history with each session's full date and time
+- Group historical items by friend, view friend subtotals, and filter history by friend
+- Open today's item, spending, session, and friend totals from the chart icon in the header
+- Edit or delete friends and items, and delete saved sessions
+- Save app data in the browser's `localStorage`; no backend is required
+- Responsive mobile-first layout
 
 ## Tech Stack
 
 - HTML5
 - CSS3
 - Vanilla JavaScript
-- [GSAP](https://gsap.com/)
-- [Lucide Icons](https://lucide.dev/)
-- Browser `localStorage`
+- [Lucide icons](https://lucide.dev/) loaded from a CDN
+- DM Sans loaded from Google Fonts
+- Browser `localStorage` for persistence
 
-No React, Vue, Angular, Bootstrap, Tailwind, or backend framework is required.
+The app has no build step or package installation. The font and icon assets are fetched from external CDNs, so an internet connection may be needed to load them.
+
+## Run
+
+Open `index.html` in a browser, or serve the folder with a local static server such as the VS Code Live Server extension.
+
+## Data
+
+App data is stored per browser and device in `localStorage`. Clearing the browser's site data will remove saved friends, items, and sessions. History currently shows sessions saved on the current day.
 
 ## Project Structure
 

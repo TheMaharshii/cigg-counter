@@ -1,8 +1,9 @@
-/* TAPRI — vanilla JS + localStorage + GSAP */
+/* TAPRI — vanilla JS + localStorage */
 const KEY = {
     items: "tapri_items_v1",
     people: "tapri_people_v1",
     current: "tapri_current_v1",
+    currentName: "tapri_current_name_v1",
     sessions: "tapri_sessions_v1",
     migrated: "tapri_migrated_v1"
 };
@@ -20,20 +21,20 @@ const DEFAULT_ITEMS = [
 let items = load(KEY.items, []);
 let people = load(KEY.people, []);
 let current = load(KEY.current, {});
+let currentSessionName = load(KEY.currentName, "");
 let sessions = load(KEY.sessions, []);
 
 const $ = id => document.getElementById(id);
 const personSelect = $("personSelect");
 const itemSelect = $("itemSelect");
+const quantityInput = $("quantityInput");
 const addToSessionBtn = $("addToSessionBtn");
 const sessionItems = $("sessionItems");
 const saveSessionBtn = $("saveSessionBtn");
+const sessionNameInput = $("sessionNameInput");
 const historyList = $("historyList");
 const manageItemsList = $("manageItemsList");
 const managePeopleList = $("managePeopleList");
-
-const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-const hasGSAP = typeof gsap !== "undefined" && !reduced;
 
 function load(key, fallback) {
     try { return JSON.parse(localStorage.getItem(key)) ?? structuredClone(fallback); }
@@ -87,20 +88,28 @@ function migrate() {
 
 function init() {
     migrate();
+    sessionNameInput.value = currentSessionName;
     renderPersonSelect(); renderItemSelect(); renderCurrent(); renderHistory(); updateSummaries(); renderManageItems(); renderManagePeople(); iconRefresh();
     bindEvents();
-    if (hasGSAP) gsap.from(".app-header, .today-card, .section", { y:14, opacity:0, duration:.35, stagger:.07, ease:"power2.out", clearProps:"transform" });
 }
 
 function bindEvents() {
     personSelect.addEventListener("change", updateAddState);
     itemSelect.addEventListener("change", updateAddState);
+    quantityInput.addEventListener("input", updateAddState);
     addToSessionBtn.addEventListener("click", addCurrent);
+    sessionNameInput.addEventListener("input", () => {
+        currentSessionName = sessionNameInput.value;
+        save(KEY.currentName, currentSessionName);
+    });
     saveSessionBtn.addEventListener("click", saveSession);
     $("addItemForm").addEventListener("submit", addItem);
     $("addPersonForm").addEventListener("submit", addPerson);
     $("manageItemsBtn").addEventListener("click", () => openModal("itemsModal", renderManageItems));
     $("managePeopleBtn").addEventListener("click", () => openModal("peopleModal", renderManagePeople));
+    $("openSummaryBtn").addEventListener("click", () => openModal("summaryModal"));
+    $("closeSummary").addEventListener("click", () => closeModal("summaryModal"));
+    $("summaryModal").addEventListener("click", e => { if (e.target.id === "summaryModal") closeModal("summaryModal"); });
     $("closeItems").addEventListener("click", () => closeModal("itemsModal"));
     $("closePeople").addEventListener("click", () => closeModal("peopleModal"));
     $("closeAddItem").addEventListener("click", () => closeModal("addItemModal"));
@@ -113,13 +122,17 @@ function bindEvents() {
     $("peopleModal").addEventListener("click", e => { if (e.target.id === "peopleModal") closeModal("peopleModal"); });
     sessionItems.addEventListener("click", handleCurrentClick);
     historyList.addEventListener("click", handleHistoryClick);
+    $("historyPersonFilter").addEventListener("change", renderHistory);
     manageItemsList.addEventListener("click", handleItemManage);
     managePeopleList.addEventListener("click", handlePeopleManage);
     $("addItemModal").querySelector("form").addEventListener("submit", () => setTimeout(() => { renderItemSelect(); renderManageItems(); }, 0));
     document.addEventListener("keydown", e => { if (e.key === "Escape") document.querySelectorAll(".modal-overlay.active").forEach(m => closeModal(m.id)); });
 }
 
-function updateAddState() { addToSessionBtn.disabled = !(personSelect.value && itemSelect.value); }
+function updateAddState() {
+    const quantity = Number(quantityInput.value);
+    addToSessionBtn.disabled = !(personSelect.value && itemSelect.value && Number.isSafeInteger(quantity) && quantity > 0);
+}
 
 function renderPersonSelect() {
     personSelect.innerHTML = `<option value="">Choose friend</option>` + people.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
@@ -133,14 +146,42 @@ function renderItemSelect() {
     }).join("");
 }
 
+function summarizeByPerson(entries) {
+    const map = new Map();
+    (entries || []).forEach(entry => {
+        const personId = entry.personId;
+        const personName = personById(personId)?.name || entry.purchaser || "Unknown";
+        const total = Number(entry.quantity || 0) * (Number(entry.price) || 0);
+        const current = map.get(personId) || { personId, personName, totalItems: 0, totalCost: 0, uniqueItems: new Set() };
+        current.totalItems += Number(entry.quantity) || 0;
+        current.totalCost += total;
+        current.uniqueItems.add(String(entry.itemId));
+        map.set(personId, current);
+    });
+    return Array.from(map.values()).map(item => ({
+        personId: item.personId,
+        personName: item.personName,
+        totalItems: item.totalItems,
+        totalCost: item.totalCost,
+        uniqueItems: item.uniqueItems.size
+    })).sort((a, b) => b.totalCost - a.totalCost);
+}
+
 function addCurrent() {
     if (!personSelect.value || !itemSelect.value) return;
+    const quantity = Number(quantityInput.value);
+    if (!Number.isSafeInteger(quantity) || quantity < 1) {
+        toast("Enter a whole quantity of 1 or more.");
+        return;
+    }
     const item = itemById(itemSelect.value), person = personById(personSelect.value);
+    if (!item || !person) return;
     const existing = Object.keys(current).find(k => current[k].itemId === item.id && current[k].personId === person.id);
-    if (existing) current[existing].quantity++;
-    else { const k=id(); current[k]={ id:k, itemId:item.id, personId:person.id, name:item.name, price:Number(item.price), quantity:1 }; }
+    if (existing) current[existing].quantity += quantity;
+    else { const k=id(); current[k]={ id:k, itemId:item.id, personId:person.id, name:item.name, price:Number(item.price), quantity }; }
+    current = Object.fromEntries(Object.entries(current).sort((a,b) => String(a[1].name).localeCompare(String(b[1].name))));
     save(KEY.current,current); renderCurrent(); updateSummaries();
-    itemSelect.value=""; updateAddState();
+    itemSelect.value=""; quantityInput.value="1"; updateAddState();
 }
 
 function renderCurrent() {
@@ -149,7 +190,22 @@ function renderCurrent() {
         sessionItems.innerHTML = `<div class="empty-state"><i data-lucide="shopping-bag"></i><p>Nothing added yet. Pick a friend and an item above.</p></div>`;
         iconRefresh(); return;
     }
-    sessionItems.innerHTML = list.map(x => {
+
+    const personSummary = summarizeByPerson(list);
+    const summaryMarkup = personSummary.length ? `
+        <div class="friend-summary">
+            <div class="friend-summary-header">Friend summary</div>
+            <div class="friend-summary-list">
+                ${personSummary.map(person => `
+                    <div class="friend-summary-pill">
+                        <span class="friend-summary-name">${esc(person.personName)}</span>
+                        <span class="friend-summary-meta">${person.totalItems} items · ${money(person.totalCost)}</span>
+                    </div>
+                `).join("")}
+            </div>
+        </div>
+    ` : "";
+    sessionItems.innerHTML = `${list.map(x => {
         const person = personById(x.personId)?.name || x.purchaser || "Unknown";
         return `<div class="session-item" data-id="${esc(x.id)}">
             <div class="session-item-info">
@@ -163,8 +219,8 @@ function renderCurrent() {
             </div>
             <div class="session-item-cost">${money(x.quantity*x.price)}</div>
         </div>`;
-    }).join("");
-    iconRefresh(); animateList(sessionItems,".session-item");
+    }).join("")}${summaryMarkup}`;
+    iconRefresh();
 }
 
 function handleCurrentClick(e) {
@@ -192,28 +248,92 @@ function updateSummaries() {
     $("todayCost").textContent=money(todayCost);
     $("todaySessions").textContent=todays.length;
     $("todayPeople").textContent=todayPeople;
-    ["sessionTotalItems","sessionTotalCost","sessionTotalPeople","todayItems","todayCost","todaySessions","todayPeople"].forEach(k=>animateValue($(k)));
 }
 
 function saveSession() {
     const list=Object.values(current); if(!list.length){ toast("Add something to the session first."); return; }
-    const s={ id:id(), date:new Date().toISOString(), items:list.map(x=>({id:id(),itemId:x.itemId,name:x.name,personId:x.personId,purchaser:personById(x.personId)?.name||"",price:x.price,quantity:x.quantity,total:x.quantity*x.price})), totalItems:list.reduce((a,x)=>a+x.quantity,0), totalCost:list.reduce((a,x)=>a+x.quantity*x.price,0) };
-    sessions.unshift(s); current={}; save(KEY.sessions,sessions); save(KEY.current,current); renderCurrent(); renderHistory(); updateSummaries();
+    const s={ id:id(), name:currentSessionName.trim(), date:new Date().toISOString(), items:list.map(x=>({id:id(),itemId:x.itemId,name:x.name,personId:x.personId,purchaser:personById(x.personId)?.name||"",price:x.price,quantity:x.quantity,total:x.quantity*x.price})), totalItems:list.reduce((a,x)=>a+x.quantity,0), totalCost:list.reduce((a,x)=>a+x.quantity*x.price,0) };
+    sessions.unshift(s); current={}; currentSessionName=""; sessionNameInput.value=""; localStorage.removeItem(KEY.currentName); save(KEY.sessions,sessions); save(KEY.current,current); renderCurrent(); renderHistory(); updateSummaries();
     const old=saveSessionBtn.innerHTML; saveSessionBtn.innerHTML=`<i data-lucide="check"></i> Saved`; saveSessionBtn.disabled=true; iconRefresh(); setTimeout(()=>{saveSessionBtn.innerHTML=old;saveSessionBtn.disabled=false;iconRefresh()},1100);
 }
 
+function historyPersonName(entry) {
+    return personById(entry.personId)?.name || entry.purchaser || "Unknown";
+}
+
+function historyPersonKey(entry) {
+    if (entry.personId) return `person:${entry.personId}`;
+    const name = historyPersonName(entry);
+    const person = people.find(item => item.name.toLowerCase() === name.toLowerCase());
+    return person ? `person:${person.id}` : `name:${name.toLowerCase()}`;
+}
+
+function renderHistoryFilter(list) {
+    const filter = $("historyPersonFilter");
+    const selected = filter.value;
+    const names = new Map();
+    list.forEach(session => (session.items || []).forEach(entry => {
+        const key = historyPersonKey(entry);
+        if (!names.has(key)) names.set(key, historyPersonName(entry));
+    }));
+    const options = Array.from(names, ([key, name]) => ({ key, name }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    filter.innerHTML = `<option value="">All friends</option>${options.map(option => `<option value="${esc(option.key)}">${esc(option.name)}</option>`).join("")}`;
+    filter.hidden = options.length === 0;
+    filter.value = names.has(selected) ? selected : "";
+}
+
 function renderHistory() {
-    const list=sessions.filter(s=>today(s.date));
-    if(!list.length){ historyList.innerHTML=`<div class="empty-state"><i data-lucide="history"></i><p>No sessions saved today.</p></div>`; iconRefresh(); return; }
-    historyList.innerHTML=list.map(s=>{
-        const time=new Date(s.date).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
-        return `<article class="history-card" data-session-id="${esc(s.id)}">
-            <div class="history-head"><div><span class="history-time">${time}</span><span class="history-count">${s.totalItems} items · ${money(s.totalCost)}</span></div>
-            <button class="icon-btn danger-icon delete-session-btn" data-delete-session="${esc(s.id)}" aria-label="Delete session"><i data-lucide="trash-2"></i></button></div>
-            <div class="history-lines">${s.items.map(x=>`<div class="history-cigarette"><div class="history-cigarette-info"><span>${esc(x.name)} × ${x.quantity}</span><div class="history-buyer">${esc(x.purchaser || personById(x.personId)?.name || "Unknown")}</div></div><span>${money(x.total)}</span></div>`).join("")}</div>
-            <div class="history-total"><span>${s.items.length} different items</span><strong>${money(s.totalCost)}</strong></div>
+    const list = sessions.filter(session => today(session.date));
+    renderHistoryFilter(list);
+    if (!list.length) {
+        historyList.innerHTML = `<div class="empty-state"><i data-lucide="history"></i><p>No sessions saved today.</p></div>`;
+        iconRefresh();
+        return;
+    }
+
+    const selectedPerson = $("historyPersonFilter").value;
+    const visibleSessions = list.map(session => ({
+        session,
+        entries: (session.items || []).filter(entry => !selectedPerson || historyPersonKey(entry) === selectedPerson)
+    })).filter(session => session.entries.length);
+
+    if (!visibleSessions.length) {
+        historyList.innerHTML = `<div class="empty-state"><i data-lucide="filter"></i><p>No sessions for this friend today.</p></div>`;
+        iconRefresh();
+        return;
+    }
+
+    historyList.innerHTML = visibleSessions.map(({ session, entries }) => {
+        const dateTime = new Date(session.date).toLocaleString([], { dateStyle: "long", timeStyle: "short" });
+        const groups = new Map();
+        entries.forEach(entry => {
+            const key = historyPersonKey(entry);
+            if (!groups.has(key)) groups.set(key, { name: historyPersonName(entry), entries: [] });
+            groups.get(key).entries.push(entry);
+        });
+        const groupMarkup = Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name)).map(group => {
+            const itemCount = group.entries.reduce((total, entry) => total + (Number(entry.quantity) || 0), 0);
+            const totalCost = group.entries.reduce((total, entry) => total + Number(entry.total ?? ((Number(entry.quantity) || 0) * (Number(entry.price) || 0))), 0);
+            const initial = group.name.trim().charAt(0).toUpperCase() || "?";
+            return `<section class="history-person-group">
+                <div class="history-person-heading"><div class="history-person-title"><span class="history-person-avatar" aria-hidden="true">${esc(initial)}</span><strong>${esc(group.name)}</strong></div><span class="history-person-total">${itemCount} items · ${money(totalCost)}</span></div>
+                ${group.entries.map(entry => {
+                    const lineTotal = Number(entry.total ?? ((Number(entry.quantity) || 0) * (Number(entry.price) || 0)));
+                    return `<div class="history-cigarette"><div class="history-cigarette-info"><span>${esc(entry.name)} × ${Number(entry.quantity) || 0}</span></div><span>${money(lineTotal)}</span></div>`;
+                }).join("")}
+            </section>`;
+        }).join("");
+        const itemCount = entries.reduce((total, entry) => total + (Number(entry.quantity) || 0), 0);
+        const totalCost = entries.reduce((total, entry) => total + Number(entry.total ?? ((Number(entry.quantity) || 0) * (Number(entry.price) || 0))), 0);
+        return `<article class="history-card" data-session-id="${esc(session.id)}">
+            <div class="history-head"><div><span class="history-session-name">${esc(session.name?.trim() || "Unnamed session")}</span><span class="history-time">${esc(dateTime)}</span></div>
+            <button class="icon-btn danger-icon delete-session-btn" data-delete-session="${esc(session.id)}" aria-label="Delete session"><i data-lucide="trash-2"></i></button></div>
+            ${groupMarkup}
+            <div class="history-total"><span>${selectedPerson ? "Friend total" : "Bill total"} · ${itemCount} items</span><strong>${money(totalCost)}</strong></div>
         </article>`;
-    }).join(""); iconRefresh(); animateList(historyList,".history-card");
+    }).join("");
+    iconRefresh();
 }
 
 function handleHistoryClick(e) {
@@ -255,12 +375,23 @@ function handlePeopleManage(e){const t=e.target.closest("[data-toggle-person]");
 function savePerson(personId){const row=managePeopleList.querySelector(`[data-person-id="${CSS.escape(personId)}"]`),p=personById(personId);if(!row||!p)return;const name=row.querySelector(".manage-name").value.trim();if(!name){toast("Name cannot be empty.");return;}if(people.some(x=>x.id!==personId&&x.name.toLowerCase()===name.toLowerCase())){toast("That friend already exists.");return;}p.name=name;save(KEY.people,people);renderPersonSelect();renderManagePeople();renderHistory();toast("Friend updated");}
 function deletePerson(personId){const p=personById(personId);if(!p)return;if(!confirm(`Delete "${p.name}"?`))return;people=people.filter(x=>x.id!==personId);Object.keys(current).forEach(k=>{if(current[k].personId===personId)delete current[k]});save(KEY.people,people);save(KEY.current,current);renderPersonSelect();renderCurrent();renderManagePeople();updateSummaries();toast("Friend deleted");}
 
-function openModal(id, render){if(render)render();const m=$(id);m.classList.add("active");m.setAttribute("aria-hidden","false");const panel=m.querySelector(".modal");if(hasGSAP){gsap.fromTo(m,{opacity:0},{opacity:1,duration:.16});gsap.fromTo(panel,{y:24,opacity:0,scale:.99},{y:0,opacity:1,scale:1,duration:.25,ease:"power2.out"});}else panel.focus?.();}
-function closeModal(id){const m=$(id),panel=m.querySelector(".modal");if(!m.classList.contains("active"))return;if(hasGSAP){gsap.to(panel,{y:16,opacity:0,duration:.16,ease:"power2.in"});gsap.to(m,{opacity:0,duration:.18,onComplete:()=>{m.classList.remove("active");m.setAttribute("aria-hidden","true");}});}else{m.classList.remove("active");m.setAttribute("aria-hidden","true");}}
-function animateList(container, selector){if(!hasGSAP)return;gsap.fromTo(container.querySelectorAll(selector),{y:8,opacity:0},{y:0,opacity:1,duration:.22,stagger:.025,ease:"power2.out",clearProps:"transform"});}
-function animateValue(el){if(hasGSAP)gsap.fromTo(el,{y:-3,opacity:.55},{y:0,opacity:1,duration:.18,ease:"power2.out"});}
-function animatePress(el){if(hasGSAP)gsap.timeline().to(el,{scale:.94,duration:.06}).to(el,{scale:1,duration:.14,ease:"back.out(2)"});}
-function animateAccordion(row,open){const box=row.querySelector(".manage-settings");if(!box)return;if(!hasGSAP){row.classList.toggle("open",open);return;}if(open){row.classList.add("open");gsap.fromTo(box,{height:0,opacity:0},{height:"auto",opacity:1,duration:.22,ease:"power2.out",clearProps:"height"});}else{gsap.to(box,{height:0,opacity:0,duration:.17,ease:"power2.in",onComplete:()=>{row.classList.remove("open");gsap.set(box,{clearProps:"height,opacity"})}});}}
-function toast(message){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t);}t.textContent=message;t.classList.add("show");if(hasGSAP){gsap.fromTo(t,{y:10,opacity:0},{y:0,opacity:1,duration:.18});}clearTimeout(t._timer);t._timer=setTimeout(()=>{if(hasGSAP)gsap.to(t,{y:6,opacity:0,duration:.16,onComplete:()=>t.classList.remove("show")});else t.classList.remove("show")},1300);}
+function openModal(id, render){
+    document.querySelectorAll(".modal-overlay.active").forEach(m => {
+        if (m.id !== id) closeModal(m.id);
+    });
+    if (render) render();
+    const m = $(id);
+    if (!m) return;
+    m.classList.add("active");
+    m.setAttribute("aria-hidden","false");
+    const panel = m.querySelector(".modal");
+    panel?.focus?.();
+}
+function closeModal(id){const m=$(id); if(!m) return; const panel=m.querySelector(".modal");if(!m.classList.contains("active"))return; m.classList.remove("active"); m.setAttribute("aria-hidden","true"); panel?.blur?.();}
+function animateList(){}
+function animateValue(){}
+function animatePress(el){ if (!el) return; el.style.transform = "scale(0.96)"; clearTimeout(el._tapTimer); el._tapTimer = setTimeout(() => { el.style.transform = ""; }, 120); }
+function animateAccordion(row,open){const box=row.querySelector(".manage-settings");if(!box)return; row.classList.toggle("open", open); box.style.display = open ? "block" : "none"; }
+function toast(message){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t);}t.textContent=message;t.classList.add("show");clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove("show"),1300);}
 
 init();

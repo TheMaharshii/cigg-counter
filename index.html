@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0b0d0f">
 <title>Tapri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="https://unpkg.com/lucide@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -17,23 +19,10 @@
             <h1>Tapri</h1>
             <p class="subtitle">Track what the gang bought, who bought it, and how much.</p>
         </div>
+        <button class="icon-btn summary-trigger" id="openSummaryBtn" type="button" aria-label="Open group summary" title="Group summary">
+            <i data-lucide="chart-pie"></i>
+        </button>
     </header>
-
-    <section class="card today-card">
-        <div class="section-heading">
-            <div>
-                <p class="eyebrow">TODAY</p>
-                <h2>Group Summary</h2>
-            </div>
-            <i data-lucide="calendar-days"></i>
-        </div>
-        <div class="summary-grid">
-            <div class="summary-item"><strong id="todayItems">0</strong><span>Items</span></div>
-            <div class="summary-item"><strong id="todayCost">₹0</strong><span>Spent</span></div>
-            <div class="summary-item"><strong id="todaySessions">0</strong><span>Sessions</span></div>
-            <div class="summary-item"><strong id="todayPeople">0</strong><span>Friends</span></div>
-        </div>
-    </section>
 
     <section class="section">
         <div class="section-heading">
@@ -49,6 +38,11 @@
                     <i data-lucide="list-plus"></i><span>Items</span>
                 </button>
             </div>
+        </div>
+
+        <div class="session-name-field">
+            <label for="sessionNameInput">Place / session name</label>
+            <input id="sessionNameInput" type="text" maxlength="60" placeholder="e.g. College canteen" autocomplete="off">
         </div>
 
         <div class="session-summary">
@@ -76,6 +70,10 @@
                     <label for="itemSelect">Item</label>
                     <select id="itemSelect"><option value="">Choose item</option></select>
                 </div>
+                <div class="quick-field">
+                    <label for="quantityInput">Quantity</label>
+                    <input id="quantityInput" type="number" min="1" step="1" value="1" inputmode="numeric">
+                </div>
             </div>
             <button class="add-session-btn" id="addToSessionBtn" type="button" disabled>
                 <i data-lucide="plus"></i> Add to session
@@ -93,10 +91,30 @@
     <section class="section history-section">
         <div class="section-heading">
             <div><p class="eyebrow">HISTORY</p><h2>Today's Sessions</h2></div>
-            <i data-lucide="history"></i>
+            <div class="history-tools">
+                <select id="historyPersonFilter" class="history-filter" aria-label="Filter history by friend">
+                    <option value="">All friends</option>
+                </select>
+                <i data-lucide="history"></i>
+            </div>
         </div>
         <div id="historyList" class="history-list"></div>
     </section>
+</div>
+
+<div class="modal-overlay" id="summaryModal" aria-hidden="true">
+    <div class="modal summary-modal" role="dialog" aria-modal="true" aria-labelledby="summaryTitle" tabindex="-1">
+        <div class="modal-header">
+            <div><p class="eyebrow">TODAY</p><h2 id="summaryTitle">Group Summary</h2></div>
+            <button class="icon-btn" id="closeSummary" type="button" aria-label="Close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="summary-grid">
+            <div class="summary-item"><strong id="todayItems">0</strong><span>Items</span></div>
+            <div class="summary-item"><strong id="todayCost">₹0</strong><span>Spent</span></div>
+            <div class="summary-item"><strong id="todaySessions">0</strong><span>Sessions</span></div>
+            <div class="summary-item"><strong id="todayPeople">0</strong><span>Friends</span></div>
+        </div>
+    </div>
 </div>
 
 <!-- ADD ITEM -->
