@@ -1,5 +1,26 @@
 /* TAPRI — vanilla JS + Supabase */
 
+const SUPABASE_URL = window.TAPRI_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY =
+    window.TAPRI_SUPABASE_PUBLISHABLE_KEY;
+
+if (!SUPABASE_URL) {
+    throw new Error("Supabase URL is missing.");
+}
+
+if (!SUPABASE_PUBLISHABLE_KEY) {
+    throw new Error("Supabase publishable key is missing.");
+}
+
+if (!window.supabase) {
+    throw new Error("Supabase library failed to load.");
+}
+
+const supabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+);
+
 const DEFAULT_ITEMS = [
     { name: "Double Switch", category: "cigarette", price: 28 },
     { name: "Connect", category: "cigarette", price: 28 },
