@@ -1,11 +1,5 @@
 /* TAPRI — vanilla JS + Supabase */
 
-const SUPABASE_URL = window.TAPRI_CONFIG?.SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY =
-    window.TAPRI_CONFIG?.SUPABASE_PUBLISHABLE_KEY;
-
-const supabase = window.supabaseClient;
-
 const DEFAULT_ITEMS = [
     { name: "Double Switch", category: "cigarette", price: 28 },
     { name: "Connect", category: "cigarette", price: 28 },
