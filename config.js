@@ -3,7 +3,7 @@
 // NEVER put the Supabase Secret key here.
 
 window.TAPRI_SUPABASE_URL =
-    "https://hsenslpxyuaxmdgjzklv.supabase.co";
+    "https://hsenslxpyuaxmdgjzklv.supabase.co";
 
 window.TAPRI_SUPABASE_PUBLISHABLE_KEY =
     "sb_publishable_KyxP228X516cWfj8UknO_g_pdG6HnPt";
