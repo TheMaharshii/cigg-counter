@@ -1,5 +1,10 @@
 /* TAPRI — vanilla JS + Supabase */
 
+(() => {
+    // Prevent duplicate execution if script.js is loaded more than once.
+    if (window.__TAPRI_APP_LOADED__) return;
+    window.__TAPRI_APP_LOADED__ = true;
+
 // Supabase client is initialized here from config.js.
 // config.js must define window.TAPRI_SUPABASE_URL and
 // window.TAPRI_SUPABASE_PUBLISHABLE_KEY.
@@ -1107,3 +1112,5 @@ function toast(message) {
 }
 
 init();
+
+})();
