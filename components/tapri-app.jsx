@@ -1,27 +1,27 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   ChartNoAxesCombined,
   Check,
-  ChevronDown,
   CircleDot,
   Cloud,
   History,
-  ListPlus,
   LogOut,
   Minus,
   Package,
+  Pencil,
   Plus,
   Save,
   ShoppingBag,
   Trash2,
   TriangleAlert,
-  UserRound,
   Users,
   X,
 } from "lucide-react";
 import { getSupabaseClient } from "../lib/supabase";
+import AppSelect from "./app-select";
 
 const DEFAULT_ITEMS = [
   { name: "Double Switch", category: "cigarette", price: 28 },
@@ -154,7 +154,19 @@ function AuthForm({ mode, busy, message, onSubmit }) {
   );
 }
 
-export default function TapriApp() {
+function AppNavigation({ page }) {
+  return (
+    <nav className="app-nav" aria-label="Main navigation">
+      <Link href="/" className={page === "home" ? "active" : ""} aria-current={page === "home" ? "page" : undefined}>Bill</Link>
+      <Link href="/summary" className={page === "summary" ? "active" : ""} aria-current={page === "summary" ? "page" : undefined}>Summary</Link>
+      <Link href="/people" className={page === "people" ? "active" : ""} aria-current={page === "people" ? "page" : undefined}>Friends</Link>
+      <Link href="/items" className={page === "items" ? "active" : ""} aria-current={page === "items" ? "page" : undefined}>Items</Link>
+      <Link href="/account" className={page === "account" ? "active" : ""} aria-current={page === "account" ? "page" : undefined}>Account</Link>
+    </nav>
+  );
+}
+
+export default function TapriApp({ page = "home" }) {
   const [user, setUser] = useState(null);
   const [people, setPeople] = useState([]);
   const [items, setItems] = useState([]);
@@ -172,6 +184,8 @@ export default function TapriApp() {
   const [modal, setModal] = useState("");
   const [selectedPerson, setSelectedPerson] = useState("");
   const [historyPersonFilter, setHistoryPersonFilter] = useState("");
+  const [summaryPersonFilter, setSummaryPersonFilter] = useState("");
+  const [summaryPeriod, setSummaryPeriod] = useState("30days");
   const [selectedItem, setSelectedItem] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [formName, setFormName] = useState("");
@@ -648,13 +662,59 @@ export default function TapriApp() {
   const draftItems = draftEntries.reduce((sum, entry) => sum + entry.quantity, 0);
   const draftTotal = draftEntries.reduce((sum, entry) => sum + entry.quantity * entry.price, 0);
   const todaySessions = sessions.filter(session => isToday(session.date));
-  const todayItems = todaySessions.reduce((sum, session) => sum + session.totalItems, 0);
-  const todayCost = todaySessions.reduce((sum, session) => sum + session.totalCost, 0);
-  const todayPeople = new Set(todaySessions.flatMap(session => session.items).map(entry => entry.personId).filter(Boolean)).size;
   const todayHistory = todaySessions.map(session => ({
     ...session,
     items: historyPersonFilter ? session.items.filter(entry => entry.personId === historyPersonFilter) : session.items,
   })).filter(session => session.items.length);
+  const summarySessions = sessions.filter(session => {
+    if (summaryPeriod === "all") return true;
+    if (summaryPeriod === "today") return isToday(session.date);
+    const ageDays = (Date.now() - new Date(session.date).getTime()) / 86400000;
+    return ageDays <= Number(summaryPeriod.replace("days", "")) && ageDays >= 0;
+  });
+  const friendSummaries = new Map();
+  summarySessions.forEach(session => session.items.forEach(entry => {
+    const personName = people.find(person => person.id === entry.personId)?.name || entry.purchaser || "Unknown";
+    const personKey = entry.personId || `name:${personName.toLowerCase()}`;
+    if (!friendSummaries.has(personKey)) {
+      friendSummaries.set(personKey, {
+        id: personKey,
+        name: personName,
+        totalItems: 0,
+        totalCost: 0,
+        sessions: new Set(),
+        items: new Map(),
+      });
+    }
+    const summary = friendSummaries.get(personKey);
+    summary.totalItems += entry.quantity;
+    summary.totalCost += entry.quantity * entry.price;
+    summary.sessions.add(session.id);
+    const itemKey = `${entry.name.toLowerCase()}|${entry.price}`;
+    const itemSummary = summary.items.get(itemKey) || { name: entry.name, price: entry.price, quantity: 0, total: 0 };
+    itemSummary.quantity += entry.quantity;
+    itemSummary.total += entry.quantity * entry.price;
+    summary.items.set(itemKey, itemSummary);
+  }));
+  const summaryRows = [...friendSummaries.values()]
+    .filter(summary => !summaryPersonFilter || summary.id === summaryPersonFilter)
+    .map(summary => ({ ...summary, items: [...summary.items.values()].sort((a, b) => b.total - a.total) }))
+    .sort((a, b) => b.totalCost - a.totalCost);
+  const summaryItemsCount = summaryRows.reduce((total, summary) => total + summary.totalItems, 0);
+  const summarySpend = summaryRows.reduce((total, summary) => total + summary.totalCost, 0);
+  const summaryTotalBill = summarySessions.reduce((total, session) => total + session.totalCost, 0);
+  const summarySessionCount = summarySessions.filter(session => (
+    !summaryPersonFilter || session.items.some(entry => entry.personId === summaryPersonFilter)
+  )).length;
+  const draftByPerson = people.map(person => {
+    const entries = draftEntries.filter(entry => entry.personId === person.id);
+    return {
+      person,
+      entries,
+      totalItems: entries.reduce((total, entry) => total + entry.quantity, 0),
+      totalCost: entries.reduce((total, entry) => total + entry.quantity * entry.price, 0),
+    };
+  }).filter(summary => summary.entries.length).sort((a, b) => b.totalCost - a.totalCost);
 
   if (!authReady && loading) {
     return <main className="app boot-screen"><div className="loading-mark"><ShoppingBag aria-hidden="true" /></div><p className="eyebrow">TAPRI</p><h1>Loading your account</h1><p className="subtitle">Syncing your bill book…</p></main>;
@@ -680,36 +740,113 @@ export default function TapriApp() {
     );
   }
 
+  if (page === "account") {
+    return (
+      <main className="app">
+        <header className="app-header page-header">
+          <div><p className="eyebrow">TAPRI</p><h1>Account</h1><p className="subtitle">Your sign-in and synced data.</p></div>
+        </header>
+        <AppNavigation page={page} />
+        <section className="section route-section">
+          <div className="account-identity"><span className="eyebrow">SIGNED IN AS</span><strong>{user.email}</strong></div>
+          <div className="account-details"><h2>Personal data</h2><p>Your friends, items, saved sessions, and current bill are owned by this account and sync across your signed-in devices.</p><button className="secondary-btn account-signout" type="button" disabled={busy} onClick={signOut}><LogOut aria-hidden="true" /><span>Sign out</span></button></div>
+        </section>
+        {toast.text && <div className={`toast show ${toast.error ? "toast-error" : ""}`} role={toast.error ? "alert" : "status"}>{toast.text}</div>}
+      </main>
+    );
+  }
+
+  if (page === "summary") {
+    return (
+      <main className="app">
+        <header className="app-header page-header">
+          <div><p className="eyebrow">TAPRI</p><h1>Friend summary</h1><p className="subtitle">See what each friend bought and how much they spent.</p></div>
+        </header>
+        <AppNavigation page={page} />
+        <section className="section route-section">
+          <div className="summary-total-bill"><span className="summary-label">TOTAL BILL</span><strong>{money(summaryTotalBill)}</strong></div>
+          <div className="summary-overview">
+            <div><span className="summary-label">FRIEND SPEND</span><strong>{money(summarySpend)}</strong></div>
+            <div><span className="summary-label">ITEMS</span><strong>{summaryItemsCount}</strong></div>
+            <div><span className="summary-label">SESSIONS</span><strong>{summarySessionCount}</strong></div>
+            <div><span className="summary-label">FRIENDS</span><strong>{summaryRows.length}</strong></div>
+          </div>
+          <div className="summary-filters">
+            <div className="quick-field"><label htmlFor="summary-period">Date range</label><AppSelect id="summary-period" ariaLabel="Filter summary by date range" value={summaryPeriod} onValueChange={setSummaryPeriod} options={[{ value: "today", label: "Today" }, { value: "7days", label: "Last 7 days" }, { value: "30days", label: "Last 30 days" }, { value: "all", label: "All time" }]} /></div>
+            <div className="quick-field"><label htmlFor="summary-person">Friend</label><AppSelect id="summary-person" ariaLabel="Filter summary by friend" value={summaryPersonFilter} onValueChange={setSummaryPersonFilter} placeholder="All friends" disabled={!people.length} options={people.map(person => ({ value: person.id, label: person.name }))} /></div>
+          </div>
+          <div className="summary-friend-list">
+            {summaryRows.length === 0 ? <div className="empty-state"><Users aria-hidden="true" /><p>No purchases found for these filters.</p></div> : summaryRows.map(summary => (
+              <article className="summary-friend" key={summary.id}>
+                <header className="summary-friend-header">
+                  <div className="history-person-title"><span className="history-person-avatar" aria-hidden="true">{summary.name.trim().charAt(0).toUpperCase()}</span><div><strong>{summary.name}</strong><p>{summary.totalItems} items · {summary.sessions.size} sessions</p></div></div>
+                  <strong className="summary-friend-total">{money(summary.totalCost)}</strong>
+                </header>
+                <div className="summary-purchase-list">
+                  {summary.items.map(item => <div className="summary-purchase-row" key={`${summary.id}-${item.name}-${item.price}`}><span>{item.name}<small>{item.quantity} × {money(item.price)}</small></span><strong>{money(item.total)}</strong></div>)}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+        {toast.text && <div className={`toast show ${toast.error ? "toast-error" : ""}`} role={toast.error ? "alert" : "status"}>{toast.text}</div>}
+      </main>
+    );
+  }
+
+  if (page === "people" || page === "items") {
+    const isItemsPage = page === "items";
+    const editorIsOpen = modal === (isItemsPage ? "item-form" : "person-form");
+    const records = isItemsPage ? items : people;
+    return (
+      <main className="app">
+        <header className="app-header page-header">
+          <div><p className="eyebrow">TAPRI</p><h1>{isItemsPage ? "Items" : "Friends"}</h1><p className="subtitle">{isItemsPage ? "Manage your saved items and default prices." : "Manage the people available on your bills."}</p></div>
+        </header>
+        <AppNavigation page={page} />
+        <section className="section route-section">
+          <div className="section-heading"><div><p className="eyebrow">YOUR ACCOUNT</p><h2>{isItemsPage ? "Saved items" : "Your friends"}</h2></div><button className="icon-btn" type="button" aria-label={isItemsPage ? "Add item" : "Add friend"} onClick={() => openEditor(isItemsPage ? "item" : "person")}><Plus aria-hidden="true" /></button></div>
+          <div className="manage-toolbar"><span>{records.length} {isItemsPage ? "items" : "friends"}</span><span>Synced to your account</span></div>
+          <div className="manage-cigarette-list">
+            {records.length === 0 ? <div className="empty-state"><Package aria-hidden="true" /><p>{isItemsPage ? "No items yet." : "No friends yet."}</p></div> : records.map(entry => <article className="manage-cigarette" key={entry.id}><div className="manage-cigarette-main"><div><strong className="manage-cigarette-name">{entry.name}</strong><p className="manage-cigarette-price">{isItemsPage ? `${CATEGORY_LABELS[entry.category] || "Other"} · ${money(entry.price)}` : "Friend"}</p></div><div className="manage-row-actions"><button className="manage-expand-btn" type="button" aria-label={`Edit ${entry.name}`} onClick={() => openEditor(isItemsPage ? "item" : "person", entry)}><Pencil aria-hidden="true" /></button><button className="manage-expand-btn danger-icon" type="button" aria-label={`Delete ${entry.name}`} onClick={() => deleteEntry(isItemsPage ? "item" : "person", entry)}><Trash2 aria-hidden="true" /></button></div></div></article>)}
+          </div>
+        </section>
+        {editorIsOpen && <Modal title={`${editing ? "Edit" : "Add"} ${isItemsPage ? "item" : "friend"}`} eyebrow={isItemsPage ? "ITEM DETAILS" : "FRIEND DETAILS"} onClose={() => { setModal(""); setEditing(null); }}><form onSubmit={submitManagedForm} noValidate><div className="form-group"><label htmlFor="managed-name">{isItemsPage ? "Item name" : "Friend name"}</label><input id="managed-name" value={formName} maxLength={60} onChange={event => setFormName(event.target.value)} required autoFocus /></div>{isItemsPage && <><div className="form-group"><label htmlFor="managed-category">Category</label><AppSelect id="managed-category" value={formCategory} onValueChange={setFormCategory} ariaLabel="Item category" options={Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label }))} /></div><div className="form-group"><label htmlFor="managed-price">Default price</label><div className="price-input"><span>₹</span><input id="managed-price" type="number" min="0" step="0.01" value={formPrice} onChange={event => setFormPrice(event.target.value)} required /></div></div></> }<button className="primary-btn" type="submit" disabled={busy}><Check aria-hidden="true" />{busy ? "Saving…" : editing ? "Save changes" : `Add ${isItemsPage ? "item" : "friend"}`}</button></form></Modal>}
+        {toast.text && <div className={`toast show ${toast.error ? "toast-error" : ""}`} role={toast.error ? "alert" : "status"}>{toast.text}</div>}
+      </main>
+    );
+  }
+
   return (
     <main className="app">
       <header className="app-header">
         <div><p className="eyebrow">TAPRI</p><h1>Tapri</h1><p className="subtitle">Track what the gang bought, who bought it, and how much.</p></div>
         <div className="header-actions">
-          <button className="icon-btn" type="button" title="Account" aria-label="Account" onClick={() => setModal("account")}><UserRound aria-hidden="true" /></button>
-          <button className="icon-btn summary-trigger" type="button" title="Group summary" aria-label="Group summary" onClick={() => setModal("summary")}><ChartNoAxesCombined aria-hidden="true" /></button>
+          <Link className="icon-btn summary-trigger" href="/summary" title="Friend spending summary" aria-label="Friend spending summary"><ChartNoAxesCombined aria-hidden="true" /></Link>
         </div>
       </header>
+      <AppNavigation page={page} />
 
       <div className="group-bar"><div><span className="eyebrow">SIGNED IN</span><strong>{user.email}</strong></div><span className="summary-status"><Cloud aria-hidden="true" /> Synced to your account</span></div>
 
       {fatalError && <p className="inline-error" role="alert"><TriangleAlert aria-hidden="true" />{fatalError}</p>}
 
       <section className="section">
-        <div className="section-heading"><div><p className="eyebrow">CURRENT SESSION</p><h2>Tapri Bill</h2></div><div className="header-actions"><button className="secondary-btn" type="button" onClick={() => setModal("people")}><Users aria-hidden="true" /><span>People</span></button><button className="secondary-btn" type="button" onClick={() => setModal("items")}><ListPlus aria-hidden="true" /><span>Items</span></button></div></div>
+        <div className="section-heading"><div><p className="eyebrow">CURRENT SESSION</p><h2>Tapri Bill</h2></div></div>
         <div className="session-name-field"><label htmlFor="session-name">Place / session name</label><input id="session-name" maxLength={60} value={sessionName} onChange={event => updateSessionName(event.target.value)} placeholder="e.g. College canteen" /></div>
-        <div className="session-summary"><div className="session-summary-main"><div><span className="summary-label">TOTAL</span><strong>{draftItems}</strong><small>items</small></div><div className="session-summary-cost"><span className="summary-label">BILL</span><strong>{money(draftTotal)}</strong></div></div><div className="session-summary-meta"><span><Users aria-hidden="true" />{new Set(draftEntries.map(entry => entry.personId)).size} friends</span><span className="summary-status"><CircleDot aria-hidden="true" />Current session</span></div></div>
-        <div className="quick-add-card"><div className="quick-add-title"><div><p className="eyebrow">QUICK ADD</p><h3>Who bought what?</h3></div><ShoppingBag aria-hidden="true" /></div><div className="quick-add-fields"><div className="quick-field"><label htmlFor="person-select">Friend</label><select id="person-select" value={selectedPerson} onChange={event => setSelectedPerson(event.target.value)}><option value="">Choose friend</option>{people.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}</select></div><div className="quick-field"><label htmlFor="item-select">Item</label><select id="item-select" value={selectedItem} onChange={event => setSelectedItem(event.target.value)}><option value="">Choose item</option>{Object.keys(CATEGORY_LABELS).map(category => {
+        <div className="quick-add-card"><div className="quick-add-title"><div><p className="eyebrow">QUICK ADD</p><h3>Who bought what?</h3></div><ShoppingBag aria-hidden="true" /></div><div className="quick-add-fields"><div className="quick-field"><label htmlFor="person-select">Friend</label><AppSelect id="person-select" value={selectedPerson} onValueChange={setSelectedPerson} placeholder="Choose friend" ariaLabel="Friend" disabled={!people.length} options={people.map(person => ({ value: person.id, label: person.name }))} /></div><div className="quick-field"><label htmlFor="item-select">Item</label><AppSelect id="item-select" value={selectedItem} onValueChange={setSelectedItem} placeholder="Choose item" ariaLabel="Item" disabled={!items.length} options={Object.keys(CATEGORY_LABELS).map(category => {
             const categoryItems = items.filter(item => item.category === category);
-            return categoryItems.length ? <optgroup key={category} label={CATEGORY_LABELS[category]}>{categoryItems.map(item => <option key={item.id} value={item.id}>{item.name} — {money(item.price)}</option>)}</optgroup> : null;
-          })}</select></div><div className="quick-field"><label htmlFor="quantity">Quantity</label><input id="quantity" type="number" min="1" step="1" inputMode="numeric" value={quantity} onChange={event => setQuantity(event.target.value)} /></div></div><button className="add-session-btn" type="button" disabled={!selectedPerson || !selectedItem || !Number.isSafeInteger(Number(quantity)) || Number(quantity) < 1} onClick={addToDraft}><Plus aria-hidden="true" />Add to session</button><p className="quick-add-hint">Add the same item for a friend again to increase its quantity.</p></div>
+            return categoryItems.length ? { label: CATEGORY_LABELS[category], options: categoryItems.map(item => ({ value: item.id, label: `${item.name} — ${money(item.price)}` })) } : null;
+          }).filter(Boolean)} /></div><div className="quick-field"><label htmlFor="quantity">Quantity</label><input id="quantity" type="number" min="1" step="1" inputMode="numeric" value={quantity} onChange={event => setQuantity(event.target.value)} /></div></div><button className="add-session-btn" type="button" disabled={!selectedPerson || !selectedItem || !Number.isSafeInteger(Number(quantity)) || Number(quantity) < 1} onClick={addToDraft}><Plus aria-hidden="true" />Add to session</button></div>
 
         <div className="session-items">
           {draftEntries.length === 0 ? <div className="empty-state"><ShoppingBag aria-hidden="true" /><p>Nothing added yet. Choose a friend and an item above.</p></div> : draftEntries.map(entry => <article className="session-item" key={entry.id}><div className="session-item-info"><div className="session-item-name">{entry.name}</div><div className="session-item-meta"><span className="buyer-name">{people.find(person => person.id === entry.personId)?.name || "Unknown"}</span><span className="buyer-dot" /><span>{money(entry.price)} each</span></div></div><div className="session-controls"><button className="quantity-btn" type="button" aria-label={`Decrease ${entry.name}`} onClick={() => changeQuantity(entry.id, -1)}><Minus aria-hidden="true" /></button><span className="session-quantity">{entry.quantity}</span><button className="quantity-btn" type="button" aria-label={`Increase ${entry.name}`} onClick={() => changeQuantity(entry.id, 1)}><Plus aria-hidden="true" /></button></div><strong className="session-item-cost">{money(entry.quantity * entry.price)}</strong></article>)}
         </div>
+        {draftByPerson.length > 0 && <section className="current-friend-summary" aria-labelledby="current-friend-summary-title"><div className="section-heading"><div><p className="eyebrow">CURRENT BILL</p><h2 id="current-friend-summary-title">By friend</h2></div></div><div className="current-friend-list">{draftByPerson.map(summary => <article className="current-friend-row" key={summary.person.id}><div className="current-friend-heading"><strong>{summary.person.name}</strong><span>{summary.totalItems} items · {money(summary.totalCost)}</span></div><div className="current-friend-items">{summary.entries.map(entry => <div key={entry.id}><span>{entry.name} × {entry.quantity}</span><span>{money(entry.price * entry.quantity)}</span></div>)}</div></article>)}</div><div className="current-friend-total"><span>Total bill · {draftItems} items</span><strong>{money(draftTotal)}</strong></div></section>}
         <button className="primary-btn save-session-btn" type="button" disabled={busy || draftEntries.length === 0} onClick={saveSession}><Save aria-hidden="true" />Save session</button>
       </section>
 
-      <section className="section history-section"><div className="section-heading"><div><p className="eyebrow">HISTORY</p><h2>Today’s Sessions</h2></div><div className="history-tools"><select className="history-filter" aria-label="Filter history by friend" value={historyPersonFilter} onChange={event => setHistoryPersonFilter(event.target.value)}><option value="">All friends</option>{people.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}</select><History aria-hidden="true" /></div></div>
+      <section className="section history-section"><div className="section-heading"><div><p className="eyebrow">HISTORY</p><h2>Today’s Sessions</h2></div><div className="history-tools"><AppSelect className="history-filter" ariaLabel="Filter history by friend" value={historyPersonFilter} onValueChange={setHistoryPersonFilter} placeholder="All friends" disabled={!people.length} options={people.map(person => ({ value: person.id, label: person.name }))} /><History aria-hidden="true" /></div></div>
         <div className="history-list">{todayHistory.length === 0 ? <div className="empty-state"><History aria-hidden="true" /><p>No sessions saved today.</p></div> : todayHistory.map(session => {
           const itemCount = session.items.reduce((sum, entry) => sum + entry.quantity, 0);
           const total = session.items.reduce((sum, entry) => sum + entry.quantity * entry.price, 0);
@@ -719,14 +856,6 @@ export default function TapriApp() {
           return <article className="history-card" key={session.id}><div className="history-head"><div><strong className="history-session-name">{session.name || "Unnamed session"}</strong><time className="history-time" dateTime={session.date}>{new Date(session.date).toLocaleString([], { dateStyle: "long", timeStyle: "short" })}</time></div><button className="icon-btn danger-icon" type="button" aria-label={`Delete ${session.name || "session"}`} onClick={() => deleteSession(session.id)}><Trash2 aria-hidden="true" /></button></div>{grouped.map(({ person, entries }) => <section className="history-person-group" key={person.id}><div className="history-person-heading"><div className="history-person-title"><span className="history-person-avatar" aria-hidden="true">{person.name.trim().charAt(0).toUpperCase()}</span><strong>{person.name}</strong></div><span className="history-person-total">{entries.reduce((sum, entry) => sum + entry.quantity, 0)} items · {money(entries.reduce((sum, entry) => sum + entry.quantity * entry.price, 0))}</span></div>{entries.map(entry => <div className="history-cigarette" key={entry.id}><span>{entry.name} × {entry.quantity}</span><strong>{money(entry.quantity * entry.price)}</strong></div>)}</section>)}<div className="history-total"><span>{historyPersonFilter ? "Friend total" : "Bill total"} · {itemCount} items</span><strong>{money(total)}</strong></div></article>;
         })}</div>
       </section>
-
-      {modal === "account" && <Modal title="Your account" eyebrow="SUPABASE ACCOUNT" onClose={() => setModal("")}><p className="account-identity">{user.email}</p><p className="account-message">Your people, items, sessions, and current bill are synced to this account.</p><button className="secondary-btn account-signout" type="button" disabled={busy} onClick={signOut}><LogOut aria-hidden="true" /><span>Sign out</span></button></Modal>}
-
-      {modal === "summary" && <Modal title="Account Summary" eyebrow="TODAY" onClose={() => setModal("")} className="summary-modal"><div className="summary-grid">{[[todayItems, "Items"], [money(todayCost), "Spent"], [todaySessions.length, "Sessions"], [todayPeople, "Friends"]].map(([value, label]) => <div className="summary-item" key={label}><strong>{value}</strong><span>{label}</span></div>)}</div></Modal>}
-
-      {(modal === "items" || modal === "people") && <Modal title={modal === "items" ? "Manage Items" : "Manage Friends"} eyebrow={modal === "items" ? "ITEMS" : "FRIENDS"} onClose={() => setModal("")}><div className="manage-toolbar"><span>{modal === "items" ? `${items.length} items` : `${people.length} friends`}</span><button className="icon-btn" type="button" aria-label={modal === "items" ? "Add item" : "Add friend"} onClick={() => openEditor(modal === "items" ? "item" : "person")}><Plus aria-hidden="true" /></button></div><div className="manage-cigarette-list">{(modal === "items" ? items : people).length === 0 ? <div className="empty-state"><Package aria-hidden="true" /><p>Nothing here yet.</p></div> : (modal === "items" ? items : people).map(entry => <article className="manage-cigarette" key={entry.id}><div className="manage-cigarette-main"><div><strong className="manage-cigarette-name">{entry.name}</strong><p className="manage-cigarette-price">{modal === "items" ? `${CATEGORY_LABELS[entry.category] || "Other"} · ${money(entry.price)}` : "Friend"}</p></div><div className="manage-row-actions"><button className="manage-expand-btn" type="button" aria-label={`Edit ${entry.name}`} onClick={() => openEditor(modal === "items" ? "item" : "person", entry)}><ChevronDown aria-hidden="true" /></button><button className="manage-expand-btn danger-icon" type="button" aria-label={`Delete ${entry.name}`} onClick={() => deleteEntry(modal === "items" ? "item" : "person", entry)}><Trash2 aria-hidden="true" /></button></div></div></article>)}</div></Modal>}
-
-      {(modal === "item-form" || modal === "person-form") && <Modal title={`${editing ? "Edit" : "Add"} ${modal === "item-form" ? "item" : "friend"}`} eyebrow={modal === "item-form" ? "ITEM DETAILS" : "FRIEND DETAILS"} onClose={() => { setModal(modal === "item-form" ? "items" : "people"); setEditing(null); }}><form onSubmit={submitManagedForm} noValidate><div className="form-group"><label htmlFor="managed-name">{modal === "item-form" ? "Item name" : "Name"}</label><input id="managed-name" value={formName} maxLength={60} onChange={event => setFormName(event.target.value)} required autoFocus /></div>{modal === "item-form" && <><div className="form-group"><label htmlFor="managed-category">Category</label><select id="managed-category" value={formCategory} onChange={event => setFormCategory(event.target.value)}>{Object.entries(CATEGORY_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div><div className="form-group"><label htmlFor="managed-price">Default price</label><div className="price-input"><span>₹</span><input id="managed-price" type="number" min="0" step="0.01" value={formPrice} onChange={event => setFormPrice(event.target.value)} required /></div></div></>}<button className="primary-btn" type="submit" disabled={busy}><Check aria-hidden="true" />{busy ? "Saving…" : "Save"}</button></form></Modal>}
 
       {toast.text && <div className={`toast show ${toast.error ? "toast-error" : ""}`} role={toast.error ? "alert" : "status"}>{toast.text}</div>}
     </main>
