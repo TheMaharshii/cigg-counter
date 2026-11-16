@@ -48,11 +48,16 @@ Every app record includes `user_id` referencing `auth.users(id)`. Reads and writ
 ## Project Structure
 
 ```text
-app/                    Next.js App Router
-components/             Tapri dashboard and account UI
-lib/                    Supabase browser client
+app/                     Next.js App Router pages
+	page.jsx               Bill and today's history
+	summary/page.jsx       Friend spend and item breakdowns
+	people/page.jsx        Friends management
+	items/page.jsx         Item management
+	account/page.jsx       Account details and sign-out
+components/              Tapri views and shared navigation
+lib/                     Supabase browser client
 supabase/reset-schema.sql  Destructive per-user schema reset and RLS
-style.css               Global responsive styles
-.env.example            Required environment variable names
+style.css                Global responsive styles
+.env.example             Required environment variable names
 ```
 ├── script.js
