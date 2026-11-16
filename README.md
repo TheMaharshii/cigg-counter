@@ -1,47 +1,58 @@
 # Tapri
 
-A mobile-first shared bill tracker for friends at a tapri, cafe, or casual hangout.
-
-Tapri tracks **what was bought, who bought it, quantities, and the bill total for each session**.
+Tapri is a mobile-first shared bill tracker for friends at a tapri, cafe, or casual hangout. It tracks who bought what, quantities, and each session's bill total.
 
 ## Features
 
-- Add and manage friends and items, with default item prices
-- Assign items to a friend and choose a quantity before adding
-- Automatically merge repeated purchases of the same item by the same friend
-- Review current item quantities, per-friend subtotals, and the session bill
-- Name a session by its place; the name is retained if the page is reloaded before saving
-- Save sessions and view today's history with each session's full date and time
-- Group historical items by friend, view friend subtotals, and filter history by friend
-- Open today's item, spending, session, and friend totals from the chart icon in the header
-- Edit or delete friends and items, and delete saved sessions
-- Save app data in the browser's `localStorage`; no backend is required
-- Responsive mobile-first layout
+- Manage friends and priced items
+- Build a bill, adjust quantities, and see friend subtotals
+- Save sessions and review today's history
+- Filter history by friend and review daily totals
+- Email/password sign-in with email and password confirmation validation
+- Per-account ownership for friends, items, sessions, and session entries
+- Cross-device synchronization through Supabase Realtime
+- Current unsaved bill and session name synced to Supabase
 
-## Tech Stack
+## Stack
 
-- HTML5
-- CSS3
-- Vanilla JavaScript
-- [Lucide icons](https://lucide.dev/) loaded from a CDN
-- DM Sans loaded from Google Fonts
-- Browser `localStorage` for persistence
+- Next.js App Router and React
+- Supabase Auth and Postgres with row-level security
+- Lucide React icons
+- DM Sans from Google Fonts
 
-The app has no build step or package installation. The font and icon assets are fetched from external CDNs, so an internet connection may be needed to load them.
+## Local Development
 
-## Run
+Requirements: Node.js 20.9 or newer.
 
-Open `index.html` in a browser, or serve the folder with a local static server such as the VS Code Live Server extension.
+1. Install dependencies with `npm install`.
+2. Copy `.env.example` to `.env.local` and set your Supabase project URL and publishable key.
+3. Run `npm run dev` and open `http://localhost:3000`.
 
-## Data
+The environment variables are public browser configuration. Never use a Supabase secret or service-role key in this app.
 
-App data is stored per browser and device in `localStorage`. Clearing the browser's site data will remove saved friends, items, and sessions. History currently shows sessions saved on the current day.
+## Supabase Setup
+
+1. Back up anything you need from the current Tapri tables.
+2. Run `supabase/reset-schema.sql` in the Supabase SQL Editor. **This is destructive:** it drops the old groups-based Tapri tables and all rows in them, then creates per-user tables and RLS. Supabase Auth accounts in `auth.users` are preserved.
+3. Enable the Email provider and configure the Auth site URL and redirect allowlist for local development and the deployed Vercel domain. Anonymous sign-in is not used.
+4. The reset script enables Realtime publication for people, items, sessions, session items, and session drafts.
+
+Every app record includes `user_id` referencing `auth.users(id)`. Reads and writes are scoped to the current authenticated user, and the RLS policies enforce the same ownership boundary. An unsaved bill is stored in `session_drafts` and synced between open devices. The app removes legacy local draft keys; it does not migrate old group data into the new schema.
+
+## Deploy to Vercel
+
+1. Import the repository into Vercel; it detects Next.js automatically.
+2. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in the Vercel project's environment variables.
+3. Deploy, then add the production URL to Supabase Auth's site URL and redirect allowlist.
 
 ## Project Structure
 
 ```text
-tapri/
-├── index.html
-├── style.css
+app/                    Next.js App Router
+components/             Tapri dashboard and account UI
+lib/                    Supabase browser client
+supabase/reset-schema.sql  Destructive per-user schema reset and RLS
+style.css               Global responsive styles
+.env.example            Required environment variable names
+```
 ├── script.js
-└── README.md
